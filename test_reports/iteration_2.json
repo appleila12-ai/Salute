@@ -1,0 +1,23 @@
+{
+  "summary": "Frontend-only Expo/React Native app fully tested on mobile viewport 390x844 via web preview. All 20 requested features/flows pass end-to-end: Home → Wizard (3 steps, disabled/enabled CTA, back preserves selections, warning modal) → Results (intro, 90-day deadline, 3 categorized sections, Scarica PDF, Condividi Famiglia modal with QR + shareUrl + copy link) → Patronati e Sportelli Territoriali section (correctly positioned AFTER PDF/Share buttons, yellow pre-visit checklist with 3 items — Codice Fiscale, Documento d'Identità, Certificato Medico Introduttivo —, CAP/city search, 3 featured Sarzana cards INCA CGIL / Patronato ACLI / ITAL UIL each with star Sarzana badge, Prenota Appuntamento primary btn (tel:) and Indirizzo e contatti expandable with Email + Mappa small buttons). CAP '00153' correctly returns Patronato ACLI Roma (proximity), city 'Milano' returns INCA CGIL Milano. AI Assistant (Claude via /api/assistant) returned a real 1249-char answer to a tapped suggestion. Cassaforte Referti shows €4,99 badge and 'Prossimamente' CTA. Checklist link navigates to /checklist; all 4 checkboxes toggle, progress bar updates 0%→50%→100%, reset works, yellow tip visible. Appeal accordion opens and shows exactly 5 numbered steps. Italian copy is consistent, empathetic and free of English leftovers.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "risultati/[id].tsx is ~1150 lines — consider splitting the Results screen (PDF/Share modal, AI assistant, Appeal, Vault) into sub-components in a future refactor for maintainability.",
+    "Sharing.shareAsync / Share.share won't work on web preview (documented); users on web browser will not see a native share sheet. The in-app modal + QR + copy-link fallback correctly handles this."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100% (20/20 flows passing)"},
+  "seed_data_creation": "None. Patronati list is static in /app/frontend/src/data/patronati.ts.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 20 features verified working. AI /api/assistant integration confirmed live (Claude via emergentintegrations). shareToken depends on POST /api/reports succeeding — verified: share modal shows both the QR image (api.qrserver.com) and the /api/reports/share/{token} URL. No blockers.",
+  "rca_of_issue": "N/A — no bugs found in this iteration."
+}

@@ -23,6 +23,7 @@ import * as Sharing from "expo-sharing";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
+import { PatronatiSection } from "@/src/components/PatronatiSection";
 import {
   askAssistant,
   buildReportHtml,
@@ -316,6 +317,9 @@ export default function Risultati() {
               <Text style={styles.secondaryBtnText}>Condividi Famiglia</Text>
             </Pressable>
           </View>
+
+          {/* Patronati e Sportelli Territoriali */}
+          <PatronatiSection />
 
           {/* AI Assistant */}
           <View style={styles.aiCard} testID="results-assistant">

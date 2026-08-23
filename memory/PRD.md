@@ -22,6 +22,12 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
    - 3 sezioni categorizzate: Permessi & Congedo / Sede & Smart Working / Esenzioni & Fiscali
    - Bottone "Scarica PDF" (expo-print + expo-sharing)
    - Bottone "Condividi Famiglia" → modal con **QR code** + link + copy + native share
+   - **NUOVO — Patronati e Sportelli Territoriali** (componente `src/components/PatronatiSection.tsx`)
+     - Checklist gialla "Prima di andare al Patronato" (Codice Fiscale, Documento d'Identità, Certificato Medico Introduttivo)
+     - Campo di ricerca per CAP o città con ordinamento per prossimità
+     - 3 patronati Sarzana in evidenza (INCA CGIL Via XXI Luglio, ACLI Via Lucri, ITAL UIL Via Landinelli) con badge stella
+     - Ogni card: "Prenota Appuntamento" (tel:) + "Indirizzo e contatti" (accordion con Email/Mappa)
+     - 10 patronati totali (Sarzana, La Spezia, Genova, Milano, Roma, Napoli, Torino, Bologna)
    - Box AI "Fai una domanda alla Legge 104" con 4 suggerimenti rapidi + risposta Claude Sonnet 4.6
    - Card promozionale "Cassaforte Referti" (€4,99, prossimamente)
    - Link "Checklist documenti"
