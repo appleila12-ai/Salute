@@ -5,7 +5,8 @@ import * as Sharing from "expo-sharing";
 import { useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
-import { buildReportHtml, Report, Right } from "@/src/lib/reports";
+import { useI18n } from "@/src/lib/i18n";
+import { buildReportHtml, Report, resolveRightWithAnswers, RightCategory } from "@/src/lib/reports";
 
 interface Props {
   report: Report;
@@ -13,18 +14,18 @@ interface Props {
 }
 
 const CATEGORY_META: Record<
-  Right["category"],
-  { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }
+  RightCategory,
+  { icon: keyof typeof Ionicons.glyphMap; color: string }
 > = {
-  permessi: { label: "Permessi", icon: "time-outline", color: colors.brandPrimary },
-  fiscale: { label: "Fiscale", icon: "cash-outline", color: colors.success },
-  lavoro: { label: "Lavoro", icon: "briefcase-outline", color: colors.info },
-  iter: { label: "Iter", icon: "document-text-outline", color: colors.warning },
-  regionale: { label: "Regionale", icon: "location-outline", color: colors.brandPrimary },
-  personalizzato: { label: "Su misura", icon: "sparkles-outline", color: colors.success },
+  permessi: { icon: "time-outline", color: colors.brandPrimary },
+  fiscale: { icon: "cash-outline", color: colors.success },
+  lavoro: { icon: "briefcase-outline", color: colors.info },
+  iter: { icon: "document-text-outline", color: colors.warning },
+  regionale: { icon: "location-outline", color: colors.brandPrimary },
+  personalizzato: { icon: "sparkles-outline", color: colors.success },
 };
 
-async function toastOrLog(msg: string) {
+function toastOrLog(msg: string) {
   if (Platform.OS === "android") {
     ToastAndroid.show(msg, ToastAndroid.SHORT);
   } else {
@@ -32,11 +33,10 @@ async function toastOrLog(msg: string) {
   }
 }
 
-async function handleExport(report: Report) {
-  const html = buildReportHtml(report);
+async function handleExport(report: Report, lang: "it" | "en") {
+  const html = buildReportHtml(report, lang);
   try {
     if (Platform.OS === "web") {
-      // Web: open native print dialog
       await Print.printAsync({ html });
       return;
     }
@@ -45,22 +45,24 @@ async function handleExport(report: Report) {
     if (canShare) {
       await Sharing.shareAsync(uri, {
         mimeType: "application/pdf",
-        dialogTitle: "Condividi valutazione",
+        dialogTitle: "SaluteNav",
         UTI: "com.adobe.pdf",
       });
     } else {
-      toastOrLog(`PDF salvato: ${uri}`);
+      toastOrLog(`PDF: ${uri}`);
     }
   } catch (e) {
     console.warn("PDF export failed", e);
-    toastOrLog("Impossibile generare il PDF");
+    toastOrLog("PDF error");
   }
 }
 
 export function ReportResults({ report, showBackHint }: Props) {
   const router = useRouter();
+  const { t, lang } = useI18n();
   const a = report.answers;
-  const dateFmt = new Date(report.createdAt).toLocaleDateString("it-IT", {
+  const locale = lang === "en" ? "en-GB" : "it-IT";
+  const dateFmt = new Date(report.createdAt).toLocaleDateString(locale, {
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -68,87 +70,53 @@ export function ReportResults({ report, showBackHint }: Props) {
 
   return (
     <View testID="report-results-root">
-      <Text style={styles.resultsIntro}>
-        In base alle tue risposte, ecco cosa puoi richiedere adesso.
-      </Text>
+      <Text style={styles.resultsIntro}>{t("res.intro")}</Text>
       <Text style={styles.resultsDate} testID="report-date">
-        Generato il {dateFmt}
+        {t("res.generatedOn")} {dateFmt}
       </Text>
 
       {/* Answers summary */}
       <View style={styles.summaryCard} testID="report-summary">
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Chi assisti</Text>
-          <Text style={styles.summaryValue}>{a.assisted}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Contratto</Text>
-          <Text style={styles.summaryValue}>{a.contract}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Verbale</Text>
-          <Text style={styles.summaryValue}>{a.verbale}</Text>
-        </View>
-        {a.age ? (
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Età</Text>
-            <Text style={styles.summaryValue}>{a.age}</Text>
-          </View>
-        ) : null}
-        {a.region ? (
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Regione</Text>
-            <Text style={styles.summaryValue}>{a.region}</Text>
-          </View>
-        ) : null}
+        <SummaryRow label={t("res.summary.assisted")} value={a.assisted} />
+        <SummaryRow label={t("res.summary.contract")} value={a.contract} />
+        <SummaryRow label={t("res.summary.verbale")} value={a.verbale} />
+        {a.age ? <SummaryRow label={t("res.summary.age")} value={a.age} /> : null}
+        {a.region ? <SummaryRow label={t("res.summary.region")} value={a.region} /> : null}
         {a.diagnosis ? (
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Diagnosi</Text>
-            <Text style={styles.summaryValue} numberOfLines={2}>
-              {a.diagnosis}
-            </Text>
-          </View>
+          <SummaryRow label={t("res.summary.diagnosis")} value={a.diagnosis} />
         ) : null}
       </View>
 
       {/* Rights */}
       {report.rights.map((r, idx) => {
-        const meta = CATEGORY_META[r.category];
+        const resolved = resolveRightWithAnswers(r, a, lang);
+        const meta = CATEGORY_META[resolved.category];
+        const catLabel = t(`cat.${resolved.category}` as any);
         return (
           <View
-            key={`${r.title}-${idx}`}
+            key={`${r.id}-${idx}`}
             style={styles.rightCard}
             testID={`report-right-${idx}`}
           >
             <View style={styles.rightHeader}>
-              <View
-                style={[
-                  styles.rightIcon,
-                  { backgroundColor: `${meta.color}1A` },
-                ]}
-              >
+              <View style={[styles.rightIcon, { backgroundColor: `${meta.color}1A` }]}>
                 <Ionicons name={meta.icon} size={18} color={meta.color} />
               </View>
-              <View
-                style={[
-                  styles.rightBadge,
-                  { backgroundColor: `${meta.color}1A` },
-                ]}
-              >
+              <View style={[styles.rightBadge, { backgroundColor: `${meta.color}1A` }]}>
                 <Text style={[styles.rightBadgeText, { color: meta.color }]}>
-                  {meta.label}
+                  {catLabel}
                 </Text>
               </View>
             </View>
-            <Text style={styles.rightTitle}>{r.title}</Text>
-            <Text style={styles.rightBody}>{r.body}</Text>
+            <Text style={styles.rightTitle}>{resolved.title}</Text>
+            <Text style={styles.rightBody}>{resolved.body}</Text>
           </View>
         );
       })}
 
       {/* PDF Export */}
       <Pressable
-        onPress={() => handleExport(report)}
+        onPress={() => handleExport(report, lang)}
         style={({ pressed }) => [
           styles.primaryBtn,
           { marginTop: spacing.lg },
@@ -157,36 +125,22 @@ export function ReportResults({ report, showBackHint }: Props) {
         accessibilityRole="button"
         testID="report-pdf-button"
       >
-        <Ionicons
-          name="share-outline"
-          size={20}
-          color={colors.onBrandPrimary}
-        />
-        <Text style={styles.primaryBtnText}>Scarica o Condividi PDF</Text>
+        <Ionicons name="share-outline" size={20} color={colors.onBrandPrimary} />
+        <Text style={styles.primaryBtnText}>{t("res.pdf")}</Text>
       </Pressable>
 
       {/* Next steps: Patronato */}
       <View style={styles.stepsCard} testID="report-next-steps">
         <View style={styles.stepsHeader}>
           <View style={styles.stepsIcon}>
-            <Ionicons
-              name="flag-outline"
-              size={22}
-              color={colors.brandPrimary}
-            />
+            <Ionicons name="flag-outline" size={22} color={colors.brandPrimary} />
           </View>
-          <Text style={styles.stepsTitle}>I prossimi passi ufficiali</Text>
+          <Text style={styles.stepsTitle}>{t("res.nextSteps")}</Text>
         </View>
         <View style={styles.stepsList}>
-          <StepItem index={1} text="Porta questo PDF al patronato più vicino." />
-          <StepItem
-            index={2}
-            text="Il patronato invia gratuitamente la pratica all'INPS per te."
-          />
-          <StepItem
-            index={3}
-            text="Riceverai la convocazione dalla commissione ASL entro 90 giorni (15 se oncologico)."
-          />
+          <StepItem index={1} text={t("res.step1")} />
+          <StepItem index={2} text={t("res.step2")} />
+          <StepItem index={3} text={t("res.step3")} />
         </View>
         <Pressable
           onPress={() => router.push("/patronato")}
@@ -197,14 +151,8 @@ export function ReportResults({ report, showBackHint }: Props) {
           accessibilityRole="button"
           testID="report-patronato-button"
         >
-          <Ionicons
-            name="location"
-            size={18}
-            color={colors.brandPrimary}
-          />
-          <Text style={styles.secondaryBtnText}>
-            Cerca il Patronato più vicino
-          </Text>
+          <Ionicons name="location" size={18} color={colors.brandPrimary} />
+          <Text style={styles.secondaryBtnText}>{t("res.findPatronato")}</Text>
         </Pressable>
       </View>
 
@@ -214,25 +162,30 @@ export function ReportResults({ report, showBackHint }: Props) {
           size={18}
           color={colors.onSurfaceTertiary}
         />
-        <Text style={styles.disclaimerText}>
-          Queste indicazioni sono orientative. Per la tua situazione specifica
-          rivolgiti a un patronato o al tuo medico di base.
-        </Text>
+        <Text style={styles.disclaimerText}>{t("res.disclaimer")}</Text>
       </View>
 
       {showBackHint ? (
         <Pressable
           onPress={() => router.replace("/")}
-          style={({ pressed }) => [
-            styles.ghostBtn,
-            pressed && { opacity: 0.7 },
-          ]}
+          style={({ pressed }) => [styles.ghostBtn, pressed && { opacity: 0.7 }]}
           testID="report-home-button"
           accessibilityRole="button"
         >
-          <Text style={styles.ghostBtnText}>Torna alla home</Text>
+          <Text style={styles.ghostBtnText}>{t("common.home")}</Text>
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.summaryRow}>
+      <Text style={styles.summaryLabel}>{label}</Text>
+      <Text style={styles.summaryValue} numberOfLines={2}>
+        {value}
+      </Text>
     </View>
   );
 }
@@ -260,7 +213,6 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceTertiary,
     marginBottom: spacing.lg,
   },
-
   summaryCard: {
     backgroundColor: colors.surfaceSecondary,
     borderRadius: radius.lg,
@@ -286,7 +238,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     textAlign: "right",
   },
-
   rightCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -330,7 +281,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     color: colors.onSurfaceSecondary,
   },
-
   primaryBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -346,7 +296,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-
   stepsCard: {
     backgroundColor: colors.brandSecondary,
     borderRadius: radius.lg,
@@ -419,7 +368,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
-
   disclaimer: {
     flexDirection: "row",
     gap: spacing.sm,
@@ -434,7 +382,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.onSurfaceTertiary,
   },
-
   ghostBtn: {
     alignItems: "center",
     justifyContent: "center",

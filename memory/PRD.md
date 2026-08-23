@@ -1,54 +1,72 @@
-# SaluteNav — Dashboard di Navigazione Sanitaria
+# SaluteNav — Navigatore Sanitario
 
 ## Overview
-Mobile dashboard (Italian) for a health navigation app. Empathetic, highly accessible (WCAG AA+), soft blue & white design. No backend, all content mocked.
+Mobile dashboard (Italian + English) for a Legge 104 / Invalidità Civile navigator. Empathetic, highly accessible (WCAG AA+), soft blue/white + orange for warnings.
 
 ## Screens
-1. **Home Dashboard** (`app/index.tsx`)
-   - Warm greeting "Come possiamo aiutarti oggi?"
-   - Search bar with live mock suggestions filtering
-   - 4 vertical feature cards (large touch targets, Ionicons/MaterialCommunityIcons in `brandSecondary` boxes)
-   - Bottom banner "Hai appena ricevuto una diagnosi?" with CTA "Inizia il Percorso Guidato"
+1. **Home** (`app/index.tsx`)
+   - Top bar: brand badge + language toggle (IT/EN)
+   - Header: "Ciao / Navigatore Sanitario — La tua guida ai diritti e alla burocrazia"
+   - Search bar (mock suggestions)
+   - Primary CTA "Inizia la Valutazione Diritti" (opens warning modal → wizard)
+   - Secondary CTA "Checklist Documenti per la Visita"
+   - Accordion "Guida Salva-Tempo: Evita i 5 errori più comuni" (5 numbered cards)
+   - Saved reports carousel + "Confronta valutazioni" link
+   - Promemoria scadenze card with count badge
+   - 4 feature cards
+   - Percorso guidato banner
 
-2. **Feature Detail** (`app/feature/[id].tsx`)
-   - Dynamic route for 4 features: `diritti`, `diagnosi`, `telemedicina`, `community`
-   - Hero image with dark gradient scrim + back button
-   - Empathetic intro + sections with bullet lists
-   - Help card at bottom
+2. **Valutazione** (`app/valutazione.tsx`)
+   - Warning modal (from home) prima dell'accesso
+   - 3 required + 3 optional fields
+   - Contract now includes **Inoccupato** (esenzioni, collocamento mirato L. 68/1999)
+   - Results include category badges, PDF export, next-steps block, patronato CTA
 
-3. **Valutazione Tutele e Permessi** (`app/valutazione.tsx`)
-   - Questionario a 3 domande obbligatorie: ChoiceChips (chi assisti), Dropdown modal (contratto), Radio (verbale)
-   - Sezione "Opzionale": Età, Patologia/Diagnosi, Regione (dropdown 20 regioni) per risultati personalizzati (indennità frequenza <18, accompagnamento 65+, corsia oncologica, malattie rare, bonus regionali)
-   - Salvataggio automatico del report nello storage locale
-   - Schermata risultati con card categorizzate (Permessi/Fiscale/Lavoro/Iter/Regionale/Su misura), bottone "Scarica o Condividi PDF" (expo-print + expo-sharing) e blocco "I prossimi passi ufficiali" con CTA "Cerca il Patronato più vicino"
+3. **Checklist Documenti** (`app/checklist.tsx`)
+   - 5 checkbox items con progress bar 0–100%
+   - Salvataggio automatico nello storage
+   - Chip "Tutto pronto!" quando 100%
+   - Tip giallo "Porta sempre le fotocopie"
+   - Reset via icona in header
 
-4. **Storico valutazioni** (`app/storico/[id].tsx`)
-   - Ripristina un report salvato, mostra risultati e permette eliminazione
-   - Accessibile dalla home nella sezione "Le tue valutazioni"
+4. **Patronato** (`app/patronato.tsx`)
+   - Filtro CAP con ordinamento per prossimità
+   - 10 patronati mock su tutta Italia
+   - Chiama / Mappa / **Salva Contatto** (expo-contacts nativo, vCard su web)
 
-5. **Patronati** (`app/patronato.tsx`)
-   - Lista mock con distanza, indirizzo, orari e bottoni "Chiama" (tel:) e "Mappa" (Apple/Google Maps)
+5. **Promemoria** (`app/promemoria.tsx`)
+   - Reminder tipo (ISEE, INPS, verbale, custom) + data + note
+   - Local notifications via expo-notifications (native)
+   - Fallback web con warning
+   - Chip stato: "Tra Xg" / "In ritardo"
 
-6. **Percorso Guidato** (`app/percorso.tsx`)
-   - 4-step wizard with progress bar
-   - One question per step, single-select options
-   - `Avanti` disabled until selection; `Concludi` on last step
-   - Completion screen with summary + return to home
+6. **Confronto** (`app/confronto.tsx`)
+   - Selettore orizzontale delle valutazioni salvate
+   - Diff highlights: Nuovi diritti (verde), Non più applicabili (rosso), In comune (blu)
 
-## Data
-- `src/data/mockData.ts` — features content, search suggestions, wizard steps
-- `src/theme.ts` — design tokens (colors, spacing, radius)
+7. **Storico dettaglio** (`app/storico/[id].tsx`) + Report shared component
+
+## i18n
+- `src/lib/i18n.tsx` — provider + `useI18n()` hook + `t()` + storage-backed language
+- Dizionario copre home, wizard, risultati, patronato, checklist, promemoria, confronto, guida, warning
+- Report content localizzato via `RIGHTS_TEXTS` map (IT + EN) — 20+ chiavi diritti
+
+## Storage
+- `salutenav:lang`
+- `salutenav:reports`
+- `salutenav:reminders`
+- `salutenav:usercap`
+- `salutenav:checklist`
 
 ## Design tokens
-- Palette: `#2C6496` (brand), `#EBF2FA` (brandSecondary), `#FFFFFF` surfaces, `#111827` text
-- Radius: `md` 12, `lg` 20, `pill` 999
-- Min touch target 56pt on cards, 44pt on icon buttons
-
-## Integrations
-- None (fully static/mock as requested)
+- Palette: `#2C6496` brand, `#EBF2FA` brandSecondary, `#FFFFFF`, `#111827`
+- Warnings: `#D97706` + `#FEF3C7`
+- Success: `#059669` + `#DCFCE7`
+- Border radius: pill/lg/md
+- Min touch target 44/56 pt
 
 ## Not built (yet)
-- Real search backend / AI assistance
-- Real telemedicine booking
+- Real backend / cloud sync
+- Auth / accounts
+- AI-assisted rights lookup
 - Community chat
-- Auth

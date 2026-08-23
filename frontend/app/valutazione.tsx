@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
 import { ReportResults } from "@/src/components/ReportResults";
+import { useI18n } from "@/src/lib/i18n";
 import {
   Answers,
   AssistedOption,
@@ -38,6 +39,7 @@ const CONTRACT_OPTIONS: ContractOption[] = [
   "Dipendente Privato",
   "Dipendente Pubblico",
   "Autonomo",
+  "Inoccupato",
 ];
 
 const VERBALE_OPTIONS: VerbaleOption[] = [
@@ -51,6 +53,7 @@ type ModalKind = "contract" | "region" | null;
 export default function Valutazione() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useI18n();
 
   const [assisted, setAssisted] = useState<AssistedOption | null>(null);
   const [contract, setContract] = useState<ContractOption | null>(null);
@@ -96,12 +99,12 @@ export default function Valutazione() {
             onPress={() => setSavedReport(null)}
             style={styles.iconBtn}
             hitSlop={12}
-            accessibilityLabel="Modifica risposte"
+            accessibilityLabel={t("common.back")}
             testID="valutazione-edit-button"
           >
             <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
           </Pressable>
-          <Text style={styles.headerTitle}>I tuoi diritti</Text>
+          <Text style={styles.headerTitle}>{t("res.title")}</Text>
           <View style={styles.iconBtn} />
         </View>
         <ScrollView
@@ -128,13 +131,13 @@ export default function Valutazione() {
           onPress={() => router.back()}
           style={styles.iconBtn}
           hitSlop={12}
-          accessibilityLabel="Indietro"
+          accessibilityLabel={t("common.back")}
           testID="valutazione-back-button"
         >
           <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.headerTitle} testID="valutazione-title">
-          Valutazione Tutele e Permessi
+          {t("val.title")}
         </Text>
         <View style={styles.iconBtn} />
       </View>
@@ -148,14 +151,11 @@ export default function Valutazione() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.subtitle}>
-          Rispondi alle prime 3 domande. Le informazioni extra sono opzionali
-          ma rendono i risultati più precisi.
-        </Text>
+        <Text style={styles.subtitle}>{t("val.subtitle")}</Text>
 
         {/* Choice Chips */}
         <View style={styles.field} testID="field-assisted">
-          <Text style={styles.label}>Chi assisti?</Text>
+          <Text style={styles.label}>{t("val.qAssisted")}</Text>
           <View style={styles.chipsRow}>
             {ASSISTED_OPTIONS.map((opt) => {
               const isSel = assisted === opt;
@@ -178,7 +178,7 @@ export default function Valutazione() {
                       isSel && styles.chipTextSelected,
                     ]}
                   >
-                    {opt}
+                    {t(`opt.assisted.${opt}` as any)}
                   </Text>
                 </Pressable>
               );
@@ -188,7 +188,7 @@ export default function Valutazione() {
 
         {/* Dropdown Contract */}
         <View style={styles.field} testID="field-contract">
-          <Text style={styles.label}>Tipo di contratto di lavoro</Text>
+          <Text style={styles.label}>{t("val.qContract")}</Text>
           <Pressable
             onPress={() => setModal("contract")}
             style={({ pressed }) => [
@@ -197,7 +197,9 @@ export default function Valutazione() {
               pressed && { opacity: 0.9 },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={contract ?? "Seleziona il tipo di contratto"}
+            accessibilityLabel={
+              contract ? t(`opt.contract.${contract}` as any) : t("val.selectOpt")
+            }
             testID="dropdown-contract"
           >
             <Text
@@ -206,7 +208,7 @@ export default function Valutazione() {
                 !contract && styles.dropdownPlaceholder,
               ]}
             >
-              {contract ?? "Seleziona un'opzione"}
+              {contract ? t(`opt.contract.${contract}` as any) : t("val.selectOpt")}
             </Text>
             <Ionicons
               name="chevron-down"
@@ -218,7 +220,7 @@ export default function Valutazione() {
 
         {/* Radio Verbale */}
         <View style={styles.field} testID="field-verbale">
-          <Text style={styles.label}>Hai già un verbale di invalidità?</Text>
+          <Text style={styles.label}>{t("val.qVerbale")}</Text>
           <View style={styles.radioList}>
             {VERBALE_OPTIONS.map((opt) => {
               const isSel = verbale === opt;
@@ -249,7 +251,7 @@ export default function Valutazione() {
                       isSel && styles.radioTextSelected,
                     ]}
                   >
-                    {opt}
+                    {t(`opt.verbale.${opt}` as any)}
                   </Text>
                 </Pressable>
               );
@@ -261,16 +263,13 @@ export default function Valutazione() {
         <View style={styles.extrasHeader}>
           <View style={styles.extrasBadge}>
             <Ionicons name="sparkles" size={12} color={colors.brandPrimary} />
-            <Text style={styles.extrasBadgeText}>Opzionale</Text>
+            <Text style={styles.extrasBadgeText}>{t("val.extrasBadge")}</Text>
           </View>
-          <Text style={styles.extrasSubtitle}>
-            Aggiungi qualche dettaglio in più per risultati personalizzati
-            (bonus regionali, indennità per età, patologie specifiche).
-          </Text>
+          <Text style={styles.extrasSubtitle}>{t("val.extrasSub")}</Text>
         </View>
 
         <View style={styles.field} testID="field-age">
-          <Text style={styles.label}>Età della persona assistita</Text>
+          <Text style={styles.label}>{t("val.age")}</Text>
           <View
             style={[
               styles.inputWrap,
@@ -279,20 +278,20 @@ export default function Valutazione() {
           >
             <TextInput
               style={styles.input}
-              placeholder="Es. 45"
+              placeholder="45"
               placeholderTextColor={colors.muted}
               keyboardType="number-pad"
               maxLength={3}
               value={age}
               onChangeText={setAge}
               testID="input-age"
-              accessibilityLabel="Età in anni"
+              accessibilityLabel={t("val.age")}
             />
           </View>
         </View>
 
         <View style={styles.field} testID="field-diagnosis">
-          <Text style={styles.label}>Patologia o diagnosi</Text>
+          <Text style={styles.label}>{t("val.diagnosis")}</Text>
           <View
             style={[
               styles.inputWrap,
@@ -301,19 +300,19 @@ export default function Valutazione() {
           >
             <TextInput
               style={styles.input}
-              placeholder="Es. malattia rara, oncologica, ecc."
+              placeholder="—"
               placeholderTextColor={colors.muted}
               value={diagnosis}
               onChangeText={setDiagnosis}
               testID="input-diagnosis"
-              accessibilityLabel="Patologia o diagnosi"
+              accessibilityLabel={t("val.diagnosis")}
               returnKeyType="done"
             />
           </View>
         </View>
 
         <View style={styles.field} testID="field-region">
-          <Text style={styles.label}>Regione di residenza</Text>
+          <Text style={styles.label}>{t("val.region")}</Text>
           <Pressable
             onPress={() => setModal("region")}
             style={({ pressed }) => [
@@ -322,7 +321,7 @@ export default function Valutazione() {
               pressed && { opacity: 0.9 },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={region ?? "Seleziona la tua regione"}
+            accessibilityLabel={region ?? t("val.selectRegion")}
             testID="dropdown-region"
           >
             <Text
@@ -331,7 +330,7 @@ export default function Valutazione() {
                 !region && styles.dropdownPlaceholder,
               ]}
             >
-              {region ?? "Seleziona la tua regione"}
+              {region ?? t("val.selectRegion")}
             </Text>
             <Ionicons
               name="chevron-down"
@@ -367,7 +366,7 @@ export default function Valutazione() {
               !canSubmit && styles.primaryBtnTextDisabled,
             ]}
           >
-            {saving ? "Elaborazione…" : "Elabora i miei diritti"}
+            {saving ? t("val.submitting") : t("val.submit")}
           </Text>
           {canSubmit && !saving && (
             <Ionicons
@@ -399,7 +398,7 @@ export default function Valutazione() {
           >
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>
-              {modal === "contract" ? "Tipo di contratto" : "Regione"}
+              {modal === "contract" ? t("val.qContract") : t("val.region")}
             </Text>
             <ScrollView
               style={{ maxHeight: 380 }}
@@ -410,6 +409,10 @@ export default function Valutazione() {
                   modal === "contract"
                     ? contract === opt
                     : region === (opt as Region);
+                const label =
+                  modal === "contract"
+                    ? t(`opt.contract.${opt}` as any)
+                    : opt;
                 return (
                   <Pressable
                     key={opt}
@@ -438,7 +441,7 @@ export default function Valutazione() {
                         isSel && styles.modalItemTextSelected,
                       ]}
                     >
-                      {opt}
+                      {label}
                     </Text>
                     {isSel && (
                       <Ionicons
