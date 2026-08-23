@@ -1,0 +1,137 @@
+{
+  "app_name": "SaluteNav",
+  "personality": "1 iOS-Native Clean (Adapted for maximum empathy and accessibility)",
+  "personality_one_liner": "A clean, highly accessible, and deeply empathetic health navigation companion that prioritizes clarity and calm over visual noise.",
+  "color": {
+    "surface": "#FFFFFF",
+    "onSurface": "#111827",
+    "surfaceSecondary": "#F4F7FA",
+    "onSurfaceSecondary": "#1F2937",
+    "surfaceTertiary": "#E5E9F0",
+    "onSurfaceTertiary": "#374151",
+    "surfaceInverse": "#1E3A5F",
+    "onSurfaceInverse": "#FFFFFF",
+    "brand": "#2C6496",
+    "brandPrimary": "#2C6496",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#EBF2FA",
+    "onBrandSecondary": "#1A4971",
+    "brandTertiary": "#D1E3F5",
+    "onBrandTertiary": "#153B5C",
+    "success": "#059669",
+    "onSuccess": "#FFFFFF",
+    "warning": "#D97706",
+    "onWarning": "#FFFFFF",
+    "error": "#DC2626",
+    "onError": "#FFFFFF",
+    "info": "#2563EB",
+    "onInfo": "#FFFFFF",
+    "border": "#E5E7EB",
+    "borderStrong": "#9CA3AF",
+    "divider": "#F3F4F6"
+  },
+  "typography": {
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous padding everywhere to ensure large touch targets and uncluttered reading for older adults or those with accessibility needs.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "stack_only",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": "true",
+    "do's": [
+      "Use blur on bottom sheet headers and fixed elements over scrolling content."
+    ],
+    "dont's": [
+      "Do not use on primary content cards or text backgrounds to preserve high contrast."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Home Dashboard",
+      "purpose": "A calm, reassuring entry point that immediately offers help via search, clear core features, and a guided path for newly diagnosed patients.",
+      "states": {
+        "loading": "Centered brand-colored spinner with subtle text 'Caricamento...'",
+        "empty": "Not applicable for dashboard.",
+        "error": "Soft error banner with 'Riprova' button."
+      },
+      "layout": "Top Header with large greeting 'Come possiamo aiutarti oggi?' and an inclusive tone. Followed by a prominent Search Bar (surfaceTertiary) that is keyboard accessible. Main content is a vertical list of 4 large feature cards (Diritti e Legge 104, Dopo la Diagnosi, Telemedicina e Consulti, Community e Supporto) rather than a tight grid, to ensure text is large, contrast is high (WCAG AA), and touch targets are massive. Each card has a leading Phosphor icon tinted in brandPrimary inside a brandSecondary rounded square. At the bottom, a sticky or prominent hero banner for 'Hai appena ricevuto una diagnosi?' using the abstract blue wave image with a top-to-bottom dark gradient scrim to ensure the 'Inizia il Percorso Guidato' CTA and text have perfect contrast."
+    },
+    {
+      "name": "Feature Detail Screens",
+      "purpose": "Dedicated content screens for the 4 main sections.",
+      "states": {
+        "loading": "Skeleton text blocks.",
+        "empty": "Empathetic illustration with 'Nessun contenuto disponibile al momento.'",
+        "error": "Readable message + Retry button."
+      },
+      "layout": "Standard content layout. Large header image (using the empathetic healthcare image) with gradient scrim and back button. Content flows below with generous typography (line height 1.5x) and clear bullet points."
+    },
+    {
+      "name": "Guided Percorso Onboarding",
+      "purpose": "A multi-step, empathetic onboarding flow for newly diagnosed patients to find exactly what they need.",
+      "states": {
+        "loading": "Progress bar loading.",
+        "empty": "N/A",
+        "error": "Error loading step, 'Riprova'."
+      },
+      "layout": "Full-bleed soft surface background. One clear question per screen. Large, easy-to-tap selectable pills/cards. Sticky CTA at the bottom ('Avanti') over a glass or solid bottom container."
+    }
+  ],
+  "images": {
+    "bottom_banner_wave": {
+      "url": "https://images.unsplash.com/photo-1687197180710-b2b9484a3c5f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMHNvZnQlMjBibHVlJTIwd2F2ZSUyMGJhY2tncm91bmQlMjBjYWxtaW5nfGVufDB8fHx8MTc4NzQ5MTgxNnww&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1724405143873-cdaa5cac918e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMHNvZnQlMjBibHVlJTIwd2F2ZSUyMGJhY2tncm91bmQlMjBjYWxtaW5nfGVufDB8fHx8MTc4NzQ5MTgxNnww&ixlib=rb-4.1.0&q=85",
+      "alt": "Abstract calming blue wave"
+    },
+    "empathetic_healthcare_header": {
+      "url": "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwxfHxlbXBhdGhldGljJTIwaGVhbHRoY2FyZSUyMHBhdGllbnQlMjBkb2N0b3IlMjBzdXBwb3J0fGVufDB8fHx8MTc4NzQ5MTgxNnww&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1581056771107-24ca5f033842?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwyfHxlbXBhdGhldGljJTIwaGVhbHRoY2FyZSUyMHBhdGllbnQlMjBkb2N0b3IlMjBzdXBwb3J0fGVufDB8fHx8MTc4NzQ5MTgxNnww&ixlib=rb-4.1.0&q=85",
+      "alt": "Empathetic doctor supporting a patient"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Implement the 'iOS-Native Clean' personality with extreme focus on WCAG AA+ accessibility, prioritizing high contrast and large text.",
+    "Use 'Plus Jakarta Sans' for exceptional legibility and a friendly, empathetic tone.",
+    "Do NOT use a 2x2 grid for the main 4 features if it compromises text size or tap targets. A vertical list of 4 full-width cards is preferred for accessibility, with generous md/lg padding.",
+    "Implement the requested 'Soft blue' palette strictly using the provided HEX codes to avoid the banned generic 'indigo/purple' AI feel. Ensure #111827 text on #FFFFFF surfaces.",
+    "For the bottom banner 'Hai appena ricevuto una diagnosi?', use the `bottom_banner_wave` image with a STRICT top-to-bottom dark gradient scrim to guarantee the overlay text and CTA button remain perfectly readable.",
+    "Feature icons (balance, map, stethoscope, people) must be Phosphor icons tinted in brandPrimary, placed inside a brandSecondary tinted rounded square.",
+    "Ensure touch targets (cards, buttons) are at least 56pt high with clear tap states (scale or opacity feedback)."
+  ]
+}
