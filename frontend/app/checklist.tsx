@@ -12,24 +12,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
-import { useI18n, type DictKey } from "@/src/lib/i18n";
 import { storage } from "@/src/utils/storage";
 
 const CHECKLIST_KEY = "salutenav:checklist";
 
-const ITEMS: DictKey[] = [
-  "check.item1",
-  "check.item2",
-  "check.item3",
-  "check.item4",
-  "check.item5",
+const ITEMS = [
+  "Certificato medico introduttivo con codice INPS",
+  "Ricevuta di invio della domanda telematica",
+  "Documento d'identità e Codice Fiscale",
+  "Referti originali + fotocopie ordinate per data",
 ];
 
 export default function Checklist() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t } = useI18n();
-
   const [checked, setChecked] = useState<boolean[]>(ITEMS.map(() => false));
   const [ready, setReady] = useState(false);
 
@@ -54,44 +50,35 @@ export default function Checklist() {
     if (ready) storage.setItem(CHECKLIST_KEY, JSON.stringify(checked));
   }, [checked, ready]);
 
-  const toggle = (idx: number) => {
+  const toggle = (idx: number) =>
     setChecked((prev) => prev.map((v, i) => (i === idx ? !v : v)));
-  };
 
   const done = checked.filter(Boolean).length;
-  const total = checked.length;
-  const pct = Math.round((done / total) * 100);
-  const allDone = done === total;
-
-  const reset = () => setChecked(ITEMS.map(() => false));
+  const pct = Math.round((done / ITEMS.length) * 100);
+  const allDone = done === ITEMS.length;
 
   return (
     <SafeAreaView style={styles.safe} testID="checklist-screen">
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
-
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={styles.iconBtn}
           hitSlop={12}
-          accessibilityLabel={t("common.back")}
-          testID="checklist-back-button"
+          accessibilityLabel="Indietro"
+          testID="checklist-back-btn"
         >
           <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t("check.title")}</Text>
+        <Text style={styles.headerTitle}>Checklist per la visita</Text>
         <Pressable
-          onPress={reset}
+          onPress={() => setChecked(ITEMS.map(() => false))}
           style={styles.iconBtn}
           hitSlop={12}
-          accessibilityLabel={t("check.reset")}
-          testID="checklist-reset-button"
+          accessibilityLabel="Ricomincia"
+          testID="checklist-reset-btn"
         >
-          <Ionicons
-            name="refresh"
-            size={20}
-            color={colors.onSurfaceTertiary}
-          />
+          <Ionicons name="refresh" size={20} color={colors.onSurfaceTertiary} />
         </Pressable>
       </View>
 
@@ -103,20 +90,20 @@ export default function Checklist() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.subtitle}>{t("check.sub")}</Text>
+        <Text style={styles.subtitle}>
+          Spunta ogni voce prima di uscire di casa il giorno della commissione
+          ASL/INPS.
+        </Text>
 
         {/* Progress */}
         <View style={styles.progressCard} testID="checklist-progress">
           <View style={styles.progressHeader}>
-            <Text style={styles.progressLabel}>{t("check.progress")}</Text>
+            <Text style={styles.progressLabel}>Completato</Text>
             <Text
-              style={[
-                styles.progressPct,
-                allDone && { color: colors.success },
-              ]}
+              style={[styles.progressPct, allDone && { color: colors.success }]}
               testID="checklist-progress-text"
             >
-              {done}/{total} · {pct}%
+              {done}/{ITEMS.length} · {pct}%
             </Text>
           </View>
           <View style={styles.progressTrack}>
@@ -125,28 +112,19 @@ export default function Checklist() {
                 styles.progressFill,
                 {
                   width: `${pct}%`,
-                  backgroundColor: allDone
-                    ? colors.success
-                    : colors.brandPrimary,
+                  backgroundColor: allDone ? colors.success : colors.brandPrimary,
                 },
               ]}
             />
           </View>
-          {allDone ? (
-            <View style={styles.completeChip}>
-              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
-              <Text style={styles.completeChipText}>{t("check.complete")}</Text>
-            </View>
-          ) : null}
         </View>
 
-        {/* Items */}
         <View style={styles.itemsList}>
-          {ITEMS.map((k, idx) => {
+          {ITEMS.map((label, idx) => {
             const isChecked = checked[idx];
             return (
               <Pressable
-                key={k}
+                key={label}
                 onPress={() => toggle(idx)}
                 style={({ pressed }) => [
                   styles.itemRow,
@@ -177,19 +155,21 @@ export default function Checklist() {
                     isChecked && styles.itemTextChecked,
                   ]}
                 >
-                  {t(k)}
+                  {label}
                 </Text>
               </Pressable>
             );
           })}
         </View>
 
-        {/* Tip */}
         <View style={styles.tipCard} testID="checklist-tip">
           <View style={styles.tipIcon}>
             <Ionicons name="bulb" size={20} color={colors.warning} />
           </View>
-          <Text style={styles.tipText}>{t("check.tip")}</Text>
+          <Text style={styles.tipText}>
+            Porta sempre con te le fotocopie: la commissione potrebbe trattenere
+            i fogli originali!
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -222,10 +202,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.onSurface,
   },
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-  },
+  scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   subtitle: {
     fontSize: 15,
     lineHeight: 22,
@@ -246,7 +223,7 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.onBrandSecondary,
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -266,23 +243,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: radius.pill,
   },
-  completeChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    alignSelf: "flex-start",
-    backgroundColor: "#DCFCE7",
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    marginTop: spacing.md,
-  },
-  completeChipText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.success,
-  },
-
   itemsList: {
     gap: spacing.md,
     marginBottom: spacing.xl,
@@ -327,7 +287,6 @@ const styles = StyleSheet.create({
     color: colors.onBrandSecondary,
     fontWeight: "700",
   },
-
   tipCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -335,7 +294,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FEF3C7",
     borderRadius: radius.lg,
     padding: spacing.lg,
-    marginTop: spacing.md,
   },
   tipIcon: {
     width: 40,

@@ -1,72 +1,55 @@
 # SaluteNav — Navigatore Sanitario
 
 ## Overview
-Mobile dashboard (Italian + English) for a Legge 104 / Invalidità Civile navigator. Empathetic, highly accessible (WCAG AA+), soft blue/white + orange for warnings.
+Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 / Invalidità Civile). Design minimale soft blue / white, tono empatico, sync backend anonimo.
 
-## Screens
+## Screens (soltanto 4, come richiesto)
 1. **Home** (`app/index.tsx`)
-   - Top bar: brand badge + language toggle (IT/EN)
-   - Header: "Ciao / Navigatore Sanitario — La tua guida ai diritti e alla burocrazia"
-   - Search bar (mock suggestions)
-   - Primary CTA "Inizia la Valutazione Diritti" (opens warning modal → wizard)
-   - Secondary CTA "Checklist Documenti per la Visita"
-   - Accordion "Guida Salva-Tempo: Evita i 5 errori più comuni" (5 numbered cards)
-   - Saved reports carousel + "Confronta valutazioni" link
-   - Promemoria scadenze card with count badge
-   - 4 feature cards
-   - Percorso guidato banner
+   - Titolo "Navigatore Sanitario — La tua guida passo-passo ai diritti"
+   - Bottone "Inizia il percorso"
+   - 3 step indicator (Diagnosi / Lavoro / Documenti)
+   - Box discreto "App 100% gratuita — Offrici un caffè €3"
 
-2. **Valutazione** (`app/valutazione.tsx`)
-   - Warning modal (from home) prima dell'accesso
-   - 3 required + 3 optional fields
-   - Contract now includes **Inoccupato** (esenzioni, collocamento mirato L. 68/1999)
-   - Results include category badges, PDF export, next-steps block, patronato CTA
+2. **Wizard** (`app/valutazione.tsx`)
+   - Passo 1: chi + quando la diagnosi
+   - Passo 2: situazione lavorativa (Privato / Pubblico / Autonomo / Inoccupato-Pensionato)
+   - Passo 3: certificato INPS (Sì / No / Non so cos'è)
+   - Modale d'avviso salva-tempo "Ho capito, prosegui" prima dei risultati
 
-3. **Checklist Documenti** (`app/checklist.tsx`)
-   - 5 checkbox items con progress bar 0–100%
-   - Salvataggio automatico nello storage
-   - Chip "Tutto pronto!" quando 100%
-   - Tip giallo "Porta sempre le fotocopie"
-   - Reset via icona in header
+3. **Risultati** (`app/risultati/[id].tsx`)
+   - Intro empatico personalizzato con data diagnosi + situazione lavorativa
+   - Avviso 90 giorni (banner giallo)
+   - 3 sezioni categorizzate: Permessi & Congedo / Sede & Smart Working / Esenzioni & Fiscali
+   - Bottone "Scarica PDF" (expo-print + expo-sharing)
+   - Bottone "Condividi Famiglia" → modal con **QR code** + link + copy + native share
+   - Box AI "Fai una domanda alla Legge 104" con 4 suggerimenti rapidi + risposta Claude Sonnet 4.6
+   - Card promozionale "Cassaforte Referti" (€4,99, prossimamente)
+   - Link "Checklist documenti"
+   - Sezione pieghevole "Cosa fare se la domanda viene respinta" (5 step di ricorso INPS)
 
-4. **Patronato** (`app/patronato.tsx`)
-   - Filtro CAP con ordinamento per prossimità
-   - 10 patronati mock su tutta Italia
-   - Chiama / Mappa / **Salva Contatto** (expo-contacts nativo, vCard su web)
+4. **Checklist** (`app/checklist.tsx`)
+   - 4 caselle (certificato, ricevuta, ID, referti originali + copie)
+   - Progress bar 0-100 %, salvataggio locale, tip giallo "Porta sempre le fotocopie"
 
-5. **Promemoria** (`app/promemoria.tsx`)
-   - Reminder tipo (ISEE, INPS, verbale, custom) + data + note
-   - Local notifications via expo-notifications (native)
-   - Fallback web con warning
-   - Chip stato: "Tra Xg" / "In ritardo"
+## Backend (`backend/server.py`)
+- `POST /api/reports` — salva/upsert per `deviceId`, restituisce `shareToken`
+- `GET /api/reports/share/{token}` — visualizza report condiviso
+- `GET /api/reports/device/{device_id}` — lista report del dispositivo
+- `POST /api/assistant` — Claude Sonnet 4.6 (Emergent LLM key) con system prompt italiano su L.104 + contesto risposte utente
 
-6. **Confronto** (`app/confronto.tsx`)
-   - Selettore orizzontale delle valutazioni salvate
-   - Diff highlights: Nuovi diritti (verde), Non più applicabili (rosso), In comune (blu)
-
-7. **Storico dettaglio** (`app/storico/[id].tsx`) + Report shared component
-
-## i18n
-- `src/lib/i18n.tsx` — provider + `useI18n()` hook + `t()` + storage-backed language
-- Dizionario copre home, wizard, risultati, patronato, checklist, promemoria, confronto, guida, warning
-- Report content localizzato via `RIGHTS_TEXTS` map (IT + EN) — 20+ chiavi diritti
-
-## Storage
-- `salutenav:lang`
-- `salutenav:reports`
-- `salutenav:reminders`
-- `salutenav:usercap`
-- `salutenav:checklist`
+## Sync
+- **Silent cloud sync** via `deviceId` anonimo salvato in `SecureStore` alla prima app-open
+- Ogni valutazione viene upserted lato backend senza account
+- QR code condivisibile puntando direttamente all'endpoint `share/{token}`
+- ⚠️ Google/Apple login social non implementato in questa iterazione (richiesta esplicita futura)
 
 ## Design tokens
 - Palette: `#2C6496` brand, `#EBF2FA` brandSecondary, `#FFFFFF`, `#111827`
 - Warnings: `#D97706` + `#FEF3C7`
-- Success: `#059669` + `#DCFCE7`
-- Border radius: pill/lg/md
-- Min touch target 44/56 pt
+- Success: `#059669`
+- Radius: pill / lg / md, min touch 44/56 pt
 
-## Not built (yet)
-- Real backend / cloud sync
-- Auth / accounts
-- AI-assisted rights lookup
-- Community chat
+## Removed / Cleaned up
+- Dashboard con 4 feature cards, banner Percorso guidato
+- Search bar, feature detail screens, storico, confronto, patronato, promemoria
+- i18n toggle (app solo IT)

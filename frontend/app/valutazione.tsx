@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -7,7 +8,6 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,456 +15,355 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
-import { ReportResults } from "@/src/components/ReportResults";
-import { useI18n } from "@/src/lib/i18n";
 import {
   Answers,
-  AssistedOption,
-  ContractOption,
-  ITALIAN_REGIONS,
-  Region,
+  CertOption,
+  deriveDiagnosisDate,
   Report,
   saveReport,
-  VerbaleOption,
+  WhenOption,
+  WhoOption,
+  WorkOption,
 } from "@/src/lib/reports";
 
-const ASSISTED_OPTIONS: AssistedOption[] = [
-  "Me stesso",
-  "Genitore",
-  "Figlio",
-  "Coniuge/Partner",
+const WHO_OPTIONS: WhoOption[] = ["Io stesso", "Un genitore", "Un figlio", "Coniuge/Partner"];
+const WHEN_OPTIONS: WhenOption[] = [
+  "Meno di 30 giorni fa",
+  "Da 1 a 6 mesi fa",
+  "Oltre 6 mesi fa",
 ];
-
-const CONTRACT_OPTIONS: ContractOption[] = [
+const WORK_OPTIONS: WorkOption[] = [
   "Dipendente Privato",
   "Dipendente Pubblico",
   "Autonomo",
-  "Inoccupato",
+  "Inoccupato/Pensionato",
 ];
+const CERT_OPTIONS: CertOption[] = ["Sì", "No", "Non so cos'è"];
 
-const VERBALE_OPTIONS: VerbaleOption[] = [
-  "Sì",
-  "No",
-  "In corso di richiesta",
-];
+type StepId = 1 | 2 | 3;
 
-type ModalKind = "contract" | "region" | null;
-
-export default function Valutazione() {
+export default function Wizard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t } = useI18n();
 
-  const [assisted, setAssisted] = useState<AssistedOption | null>(null);
-  const [contract, setContract] = useState<ContractOption | null>(null);
-  const [verbale, setVerbale] = useState<VerbaleOption | null>(null);
-  const [age, setAge] = useState("");
-  const [diagnosis, setDiagnosis] = useState("");
-  const [region, setRegion] = useState<Region | null>(null);
-  const [modal, setModal] = useState<ModalKind>(null);
-  const [savedReport, setSavedReport] = useState<Report | null>(null);
+  const [step, setStep] = useState<StepId>(1);
+  const [who, setWho] = useState<WhoOption | null>(null);
+  const [when, setWhen] = useState<WhenOption | null>(null);
+  const [work, setWork] = useState<WorkOption | null>(null);
+  const [cert, setCert] = useState<CertOption | null>(null);
+  const [warnOpen, setWarnOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const canSubmit = !!assisted && !!contract && !!verbale;
+  const canProceed = useMemo(() => {
+    if (step === 1) return !!who && !!when;
+    if (step === 2) return !!work;
+    if (step === 3) return !!cert;
+    return false;
+  }, [step, who, when, work, cert]);
 
-  const modalOptions = useMemo(() => {
-    if (modal === "contract") return CONTRACT_OPTIONS as readonly string[];
-    if (modal === "region") return ITALIAN_REGIONS;
-    return [] as readonly string[];
-  }, [modal]);
-
-  const handleSubmit = async () => {
-    if (!canSubmit || saving) return;
-    setSaving(true);
-    const answers: Answers = {
-      assisted: assisted!,
-      contract: contract!,
-      verbale: verbale!,
-      age: age.trim() || undefined,
-      diagnosis: diagnosis.trim() || undefined,
-      region: region ?? undefined,
-    };
-    const report = await saveReport(answers);
-    setSavedReport(report);
-    setSaving(false);
+  const handleBack = () => {
+    if (step === 1) router.back();
+    else setStep((s) => (s - 1) as StepId);
   };
 
-  // -------- Results screen --------
-  if (savedReport) {
-    return (
-      <SafeAreaView style={styles.safe} testID="valutazione-results">
-        <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
+  const handleNext = () => {
+    if (!canProceed) return;
+    if (step < 3) {
+      setStep((s) => (s + 1) as StepId);
+    } else {
+      // Final step: show warning modal before results
+      setWarnOpen(true);
+    }
+  };
+
+  const handleContinueToResults = async () => {
+    if (!who || !when || !work || !cert || saving) return;
+    setSaving(true);
+    const answers: Answers = {
+      who,
+      when,
+      diagnosisDate: deriveDiagnosisDate(when),
+      work,
+      cert,
+    };
+    const report: Report = await saveReport(answers);
+    setWarnOpen(false);
+    setSaving(false);
+    router.replace(`/risultati/${report.id}` as any);
+  };
+
+  return (
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        {/* Header with progress */}
         <View style={styles.header}>
           <Pressable
-            onPress={() => setSavedReport(null)}
+            onPress={handleBack}
             style={styles.iconBtn}
             hitSlop={12}
-            accessibilityLabel={t("common.back")}
-            testID="valutazione-edit-button"
+            accessibilityLabel="Indietro"
+            testID="wizard-back-btn"
           >
             <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
           </Pressable>
-          <Text style={styles.headerTitle}>{t("res.title")}</Text>
+          <Text style={styles.stepIndicator} testID="wizard-step-indicator">
+            Passo {step} di 3
+          </Text>
           <View style={styles.iconBtn} />
         </View>
+
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${(step / 3) * 100}%` }]} />
+        </View>
+
         <ScrollView
           style={styles.flex}
           contentContainerStyle={[
             styles.scroll,
-            { paddingBottom: insets.bottom + spacing.xxl },
+            { paddingBottom: insets.bottom + 130 },
           ]}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <ReportResults report={savedReport} showBackHint />
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
+          {step === 1 && (
+            <View testID="step-1">
+              <View style={styles.stepIconWrap}>
+                <View style={styles.stepIcon}>
+                  <Ionicons
+                    name="heart-outline"
+                    size={26}
+                    color={colors.brandPrimary}
+                  />
+                </View>
+                <Text style={styles.stepBadge}>LA DIAGNOSI</Text>
+              </View>
+              <Text style={styles.question}>Chi ha ricevuto la diagnosi?</Text>
+              <Text style={styles.helper}>
+                Prenditi il tempo che ti serve. Nessuna risposta è sbagliata.
+              </Text>
+              <View style={styles.optionsList}>
+                {WHO_OPTIONS.map((opt) => (
+                  <OptionCard
+                    key={opt}
+                    label={opt}
+                    selected={who === opt}
+                    onPress={() => setWho(opt)}
+                    testID={`opt-who-${opt}`}
+                  />
+                ))}
+              </View>
 
-  // -------- Form screen --------
-  return (
-    <SafeAreaView style={styles.safe} testID="valutazione-screen">
-      <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
-
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.iconBtn}
-          hitSlop={12}
-          accessibilityLabel={t("common.back")}
-          testID="valutazione-back-button"
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
-        </Pressable>
-        <Text style={styles.headerTitle} testID="valutazione-title">
-          {t("val.title")}
-        </Text>
-        <View style={styles.iconBtn} />
-      </View>
-
-      <ScrollView
-        style={styles.flex}
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingBottom: insets.bottom + 120 },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.subtitle}>{t("val.subtitle")}</Text>
-
-        {/* Choice Chips */}
-        <View style={styles.field} testID="field-assisted">
-          <Text style={styles.label}>{t("val.qAssisted")}</Text>
-          <View style={styles.chipsRow}>
-            {ASSISTED_OPTIONS.map((opt) => {
-              const isSel = assisted === opt;
-              return (
-                <Pressable
-                  key={opt}
-                  onPress={() => setAssisted(opt)}
-                  style={({ pressed }) => [
-                    styles.chip,
-                    isSel && styles.chipSelected,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: isSel }}
-                  testID={`chip-assisted-${opt}`}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      isSel && styles.chipTextSelected,
-                    ]}
-                  >
-                    {t(`opt.assisted.${opt}` as any)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Dropdown Contract */}
-        <View style={styles.field} testID="field-contract">
-          <Text style={styles.label}>{t("val.qContract")}</Text>
-          <Pressable
-            onPress={() => setModal("contract")}
-            style={({ pressed }) => [
-              styles.dropdown,
-              contract && styles.dropdownFilled,
-              pressed && { opacity: 0.9 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={
-              contract ? t(`opt.contract.${contract}` as any) : t("val.selectOpt")
-            }
-            testID="dropdown-contract"
-          >
-            <Text
-              style={[
-                styles.dropdownText,
-                !contract && styles.dropdownPlaceholder,
-              ]}
-            >
-              {contract ? t(`opt.contract.${contract}` as any) : t("val.selectOpt")}
-            </Text>
-            <Ionicons
-              name="chevron-down"
-              size={20}
-              color={colors.onSurfaceTertiary}
-            />
-          </Pressable>
-        </View>
-
-        {/* Radio Verbale */}
-        <View style={styles.field} testID="field-verbale">
-          <Text style={styles.label}>{t("val.qVerbale")}</Text>
-          <View style={styles.radioList}>
-            {VERBALE_OPTIONS.map((opt) => {
-              const isSel = verbale === opt;
-              return (
-                <Pressable
-                  key={opt}
-                  onPress={() => setVerbale(opt)}
-                  style={({ pressed }) => [
-                    styles.radioRow,
-                    isSel && styles.radioRowSelected,
-                    pressed && { opacity: 0.9 },
-                  ]}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: isSel }}
-                  testID={`radio-verbale-${opt}`}
-                >
-                  <View
-                    style={[
-                      styles.radioOuter,
-                      isSel && styles.radioOuterSelected,
-                    ]}
-                  >
-                    {isSel && <View style={styles.radioInner} />}
-                  </View>
-                  <Text
-                    style={[
-                      styles.radioText,
-                      isSel && styles.radioTextSelected,
-                    ]}
-                  >
-                    {t(`opt.verbale.${opt}` as any)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Optional extras */}
-        <View style={styles.extrasHeader}>
-          <View style={styles.extrasBadge}>
-            <Ionicons name="sparkles" size={12} color={colors.brandPrimary} />
-            <Text style={styles.extrasBadgeText}>{t("val.extrasBadge")}</Text>
-          </View>
-          <Text style={styles.extrasSubtitle}>{t("val.extrasSub")}</Text>
-        </View>
-
-        <View style={styles.field} testID="field-age">
-          <Text style={styles.label}>{t("val.age")}</Text>
-          <View
-            style={[
-              styles.inputWrap,
-              age.length > 0 && styles.inputWrapFilled,
-            ]}
-          >
-            <TextInput
-              style={styles.input}
-              placeholder="45"
-              placeholderTextColor={colors.muted}
-              keyboardType="number-pad"
-              maxLength={3}
-              value={age}
-              onChangeText={setAge}
-              testID="input-age"
-              accessibilityLabel={t("val.age")}
-            />
-          </View>
-        </View>
-
-        <View style={styles.field} testID="field-diagnosis">
-          <Text style={styles.label}>{t("val.diagnosis")}</Text>
-          <View
-            style={[
-              styles.inputWrap,
-              diagnosis.length > 0 && styles.inputWrapFilled,
-            ]}
-          >
-            <TextInput
-              style={styles.input}
-              placeholder="—"
-              placeholderTextColor={colors.muted}
-              value={diagnosis}
-              onChangeText={setDiagnosis}
-              testID="input-diagnosis"
-              accessibilityLabel={t("val.diagnosis")}
-              returnKeyType="done"
-            />
-          </View>
-        </View>
-
-        <View style={styles.field} testID="field-region">
-          <Text style={styles.label}>{t("val.region")}</Text>
-          <Pressable
-            onPress={() => setModal("region")}
-            style={({ pressed }) => [
-              styles.dropdown,
-              region && styles.dropdownFilled,
-              pressed && { opacity: 0.9 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={region ?? t("val.selectRegion")}
-            testID="dropdown-region"
-          >
-            <Text
-              style={[
-                styles.dropdownText,
-                !region && styles.dropdownPlaceholder,
-              ]}
-            >
-              {region ?? t("val.selectRegion")}
-            </Text>
-            <Ionicons
-              name="chevron-down"
-              size={20}
-              color={colors.onSurfaceTertiary}
-            />
-          </Pressable>
-        </View>
-      </ScrollView>
-
-      {/* Sticky bottom CTA */}
-      <View
-        style={[
-          styles.bottomBar,
-          { paddingBottom: insets.bottom + spacing.md },
-        ]}
-      >
-        <Pressable
-          onPress={handleSubmit}
-          disabled={!canSubmit || saving}
-          style={({ pressed }) => [
-            styles.primaryBtn,
-            (!canSubmit || saving) && styles.primaryBtnDisabled,
-            canSubmit && !saving && pressed && { opacity: 0.85 },
-          ]}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !canSubmit }}
-          testID="valutazione-submit"
-        >
-          <Text
-            style={[
-              styles.primaryBtnText,
-              !canSubmit && styles.primaryBtnTextDisabled,
-            ]}
-          >
-            {saving ? t("val.submitting") : t("val.submit")}
-          </Text>
-          {canSubmit && !saving && (
-            <Ionicons
-              name="arrow-forward"
-              size={18}
-              color={colors.onBrandPrimary}
-            />
+              <Text style={[styles.question, { marginTop: spacing.xl }]}>
+                Quando è avvenuta la diagnosi?
+              </Text>
+              <Text style={styles.helper}>
+                Ci aiuta a stabilire tempi e priorità.
+              </Text>
+              <View style={styles.optionsList}>
+                {WHEN_OPTIONS.map((opt) => (
+                  <OptionCard
+                    key={opt}
+                    label={opt}
+                    selected={when === opt}
+                    onPress={() => setWhen(opt)}
+                    testID={`opt-when-${opt}`}
+                  />
+                ))}
+              </View>
+            </View>
           )}
-        </Pressable>
-      </View>
 
-      {/* Dropdown Modal */}
+          {step === 2 && (
+            <View testID="step-2">
+              <View style={styles.stepIconWrap}>
+                <View style={styles.stepIcon}>
+                  <Ionicons
+                    name="briefcase-outline"
+                    size={26}
+                    color={colors.brandPrimary}
+                  />
+                </View>
+                <Text style={styles.stepBadge}>LAVORO</Text>
+              </View>
+              <Text style={styles.question}>
+                Qual è la situazione lavorativa di chi assiste o del paziente?
+              </Text>
+              <Text style={styles.helper}>
+                Il tipo di contratto determina quali permessi e sedi puoi
+                richiedere.
+              </Text>
+              <View style={styles.optionsList}>
+                {WORK_OPTIONS.map((opt) => (
+                  <OptionCard
+                    key={opt}
+                    label={opt}
+                    selected={work === opt}
+                    onPress={() => setWork(opt)}
+                    testID={`opt-work-${opt}`}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 3 && (
+            <View testID="step-3">
+              <View style={styles.stepIconWrap}>
+                <View style={styles.stepIcon}>
+                  <Ionicons
+                    name="document-text-outline"
+                    size={26}
+                    color={colors.brandPrimary}
+                  />
+                </View>
+                <Text style={styles.stepBadge}>DOCUMENTI</Text>
+              </View>
+              <Text style={styles.question}>
+                {"Avete già il certificato medico introduttivo dell'INPS?"}
+              </Text>
+              <Text style={styles.helper}>
+                {"È il primo documento necessario per attivare la pratica. Se non sai cos'è nessun problema, te lo spieghiamo dopo."}
+              </Text>
+              <View style={styles.optionsList}>
+                {CERT_OPTIONS.map((opt) => (
+                  <OptionCard
+                    key={opt}
+                    label={opt}
+                    selected={cert === opt}
+                    onPress={() => setCert(opt)}
+                    testID={`opt-cert-${opt}`}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Sticky CTA */}
+        <View
+          style={[
+            styles.bottomBar,
+            { paddingBottom: insets.bottom + spacing.md },
+          ]}
+        >
+          <Pressable
+            onPress={handleNext}
+            disabled={!canProceed}
+            style={({ pressed }) => [
+              styles.primaryBtn,
+              !canProceed && styles.primaryBtnDisabled,
+              canProceed && pressed && { opacity: 0.85 },
+            ]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !canProceed }}
+            testID="wizard-next-btn"
+          >
+            <Text
+              style={[
+                styles.primaryBtnText,
+                !canProceed && styles.primaryBtnTextDisabled,
+              ]}
+            >
+              {step === 3 ? "Vedi i tuoi diritti" : "Avanti"}
+            </Text>
+            {canProceed && (
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={colors.onBrandPrimary}
+              />
+            )}
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+
+      {/* Warning modal */}
       <Modal
-        visible={modal !== null}
+        visible={warnOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => setModal(null)}
+        onRequestClose={() => setWarnOpen(false)}
       >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setModal(null)}
-        >
-          <Pressable
-            style={[
-              styles.modalSheet,
-              { paddingBottom: insets.bottom + spacing.lg },
-            ]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>
-              {modal === "contract" ? t("val.qContract") : t("val.region")}
+        <View style={styles.modalBackdrop}>
+          <View style={styles.warnCard}>
+            <View style={styles.warnIconWrap}>
+              <Ionicons name="warning" size={32} color={colors.warning} />
+            </View>
+            <Text style={styles.warnTitle}>Attenzione, salva-tempo</Text>
+            <Text style={styles.warnBody}>
+              {"Verifica che il medico abbia spuntato SIA l'Invalidità Civile SIA la Legge 104 sul certificato per non ripetere la procedura!"}
             </Text>
-            <ScrollView
-              style={{ maxHeight: 380 }}
-              showsVerticalScrollIndicator={false}
+            <Pressable
+              onPress={handleContinueToResults}
+              disabled={saving}
+              style={({ pressed }) => [
+                styles.warnCta,
+                saving && { opacity: 0.7 },
+                !saving && pressed && { opacity: 0.85 },
+              ]}
+              accessibilityRole="button"
+              testID="warn-continue-btn"
             >
-              {modalOptions.map((opt, idx) => {
-                const isSel =
-                  modal === "contract"
-                    ? contract === opt
-                    : region === (opt as Region);
-                const label =
-                  modal === "contract"
-                    ? t(`opt.contract.${opt}` as any)
-                    : opt;
-                return (
-                  <Pressable
-                    key={opt}
-                    onPress={() => {
-                      if (modal === "contract") {
-                        setContract(opt as ContractOption);
-                      } else if (modal === "region") {
-                        setRegion(opt as Region);
-                      }
-                      setModal(null);
-                    }}
-                    style={({ pressed }) => [
-                      styles.modalItem,
-                      idx !== modalOptions.length - 1 && styles.modalItemDivider,
-                      pressed && { opacity: 0.7 },
-                    ]}
-                    testID={
-                      modal === "contract"
-                        ? `option-contract-${opt}`
-                        : `option-region-${opt}`
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.modalItemText,
-                        isSel && styles.modalItemTextSelected,
-                      ]}
-                    >
-                      {label}
-                    </Text>
-                    {isSel && (
-                      <Ionicons
-                        name="checkmark"
-                        size={20}
-                        color={colors.brandPrimary}
-                      />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
+              <Text style={styles.warnCtaText}>
+                {saving ? "Elaborazione…" : "Ho capito, prosegui"}
+              </Text>
+              {!saving && (
+                <Ionicons
+                  name="arrow-forward"
+                  size={18}
+                  color={colors.onBrandPrimary}
+                />
+              )}
+            </Pressable>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+function OptionCard({
+  label,
+  selected,
+  onPress,
+  testID,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  testID: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.optionCard,
+        selected && styles.optionCardSelected,
+        pressed && { opacity: 0.9 },
+      ]}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      testID={testID}
+    >
+      <View style={[styles.radio, selected && styles.radioSelected]}>
+        {selected && (
+          <Ionicons name="checkmark" size={14} color={colors.onBrandPrimary} />
+        )}
+      </View>
+      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   flex: { flex: 1 },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -481,191 +380,102 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.onSurface,
-  },
-
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.onSurfaceTertiary,
-    marginBottom: spacing.xl,
-  },
-
-  field: {
-    marginBottom: spacing.xl,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.onSurface,
-    marginBottom: spacing.md,
-  },
-
-  // Chips
-  chipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: spacing.lg,
-    height: 44,
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    backgroundColor: colors.surfaceSecondary,
-    borderWidth: 1.5,
-    borderColor: "transparent",
-  },
-  chipSelected: {
-    backgroundColor: colors.brandSecondary,
-    borderColor: colors.brandPrimary,
-  },
-  chipText: {
+  stepIndicator: {
     fontSize: 14,
-    fontWeight: "600",
-    color: colors.onSurfaceSecondary,
+    fontWeight: "700",
+    color: colors.onSurfaceTertiary,
   },
-  chipTextSelected: {
-    color: colors.onBrandSecondary,
+  progressTrack: {
+    height: 4,
+    backgroundColor: colors.divider,
+    marginHorizontal: spacing.lg,
+    borderRadius: radius.pill,
+    overflow: "hidden",
   },
-
-  // Dropdown
-  dropdown: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 56,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surfaceSecondary,
-    borderWidth: 1.5,
-    borderColor: "transparent",
+  progressFill: {
+    height: 4,
+    backgroundColor: colors.brandPrimary,
   },
-  dropdownFilled: {
-    borderColor: colors.brandPrimary,
-    backgroundColor: colors.surface,
+  scroll: {
+    padding: spacing.xl,
+    paddingTop: spacing.xl,
   },
-  dropdownText: {
-    fontSize: 16,
-    color: colors.onSurface,
-    fontWeight: "600",
-  },
-  dropdownPlaceholder: {
-    color: colors.muted,
-    fontWeight: "500",
-  },
-
-  // Radio
-  radioList: {
-    gap: spacing.sm,
-  },
-  radioRow: {
+  stepIconWrap: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    minHeight: 56,
-    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  stepIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: radius.md,
+    backgroundColor: colors.brandSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepBadge: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.brandPrimary,
+    letterSpacing: 1.2,
+  },
+  question: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: "800",
+    color: colors.onSurface,
+    letterSpacing: -0.4,
+    marginBottom: spacing.sm,
+  },
+  helper: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.onSurfaceTertiary,
+    marginBottom: spacing.lg,
+  },
+  optionsList: {
+    gap: spacing.md,
+  },
+  optionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.lg,
+    minHeight: 64,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.border,
   },
-  radioRowSelected: {
+  optionCardSelected: {
     borderColor: colors.brandPrimary,
     backgroundColor: colors.brandSecondary,
   },
-  radioOuter: {
-    width: 22,
-    height: 22,
+  radio: {
+    width: 24,
+    height: 24,
     borderRadius: radius.pill,
     borderWidth: 2,
     borderColor: colors.borderStrong,
     alignItems: "center",
     justifyContent: "center",
   },
-  radioOuterSelected: {
+  radioSelected: {
     borderColor: colors.brandPrimary,
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: radius.pill,
     backgroundColor: colors.brandPrimary,
   },
-  radioText: {
+  optionText: {
     flex: 1,
     fontSize: 16,
-    fontWeight: "500",
     color: colors.onSurfaceSecondary,
+    fontWeight: "500",
   },
-  radioTextSelected: {
+  optionTextSelected: {
     color: colors.onBrandSecondary,
     fontWeight: "700",
   },
 
-  // Input
-  inputWrap: {
-    minHeight: 56,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surfaceSecondary,
-    borderWidth: 1.5,
-    borderColor: "transparent",
-    justifyContent: "center",
-  },
-  inputWrapFilled: {
-    borderColor: colors.brandPrimary,
-    backgroundColor: colors.surface,
-  },
-  input: {
-    fontSize: 16,
-    color: colors.onSurface,
-    padding: 0,
-    ...Platform.select({ web: { outlineStyle: "none" } as any, default: {} }),
-  },
-
-  // Optional extras header
-  extrasHeader: {
-    marginBottom: spacing.lg,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-  },
-  extrasBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    alignSelf: "flex-start",
-    backgroundColor: colors.brandSecondary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  extrasBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: colors.brandPrimary,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  extrasSubtitle: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: colors.onSurfaceTertiary,
-  },
-
-  // Bottom bar
   bottomBar: {
     position: "absolute",
     left: 0,
@@ -702,47 +512,56 @@ const styles = StyleSheet.create({
   // Modal
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(11,42,72,0.35)",
-    justifyContent: "flex-end",
+    backgroundColor: "rgba(11,42,72,0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing.xl,
   },
-  modalSheet: {
+  warnCard: {
+    width: "100%",
+    maxWidth: 380,
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    alignItems: "center",
   },
-  modalHandle: {
-    width: 40,
-    height: 4,
+  warnIconWrap: {
+    width: 64,
+    height: 64,
     borderRadius: radius.pill,
-    backgroundColor: colors.surfaceTertiary,
-    alignSelf: "center",
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.md,
   },
-  modalTitle: {
-    fontSize: 15,
-    fontWeight: "700",
+  warnTitle: {
+    fontSize: 20,
+    fontWeight: "800",
     color: colors.onSurface,
+    textAlign: "center",
     marginBottom: spacing.sm,
   },
-  modalItem: {
+  warnBody: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: colors.onSurfaceSecondary,
+    textAlign: "center",
+    marginBottom: spacing.xl,
+  },
+  warnCta: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: spacing.lg,
+    justifyContent: "center",
+    gap: spacing.sm,
+    alignSelf: "stretch",
+    backgroundColor: colors.brandPrimary,
+    minHeight: 52,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.xl,
   },
-  modalItemDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  modalItemText: {
-    fontSize: 16,
-    color: colors.onSurfaceSecondary,
-    fontWeight: "500",
-  },
-  modalItemTextSelected: {
-    color: colors.brandPrimary,
+  warnCtaText: {
+    color: colors.onBrandPrimary,
+    fontSize: 15,
     fontWeight: "700",
   },
 });
