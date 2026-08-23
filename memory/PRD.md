@@ -16,7 +16,13 @@ Mobile dashboard (Italian) for a health navigation app. Empathetic, highly acces
    - Empathetic intro + sections with bullet lists
    - Help card at bottom
 
-3. **Percorso Guidato** (`app/percorso.tsx`)
+3. **Valutazione Tutele e Permessi** (`app/valutazione.tsx`)
+   - Questionario a 3 domande: ChoiceChips (chi assisti), Dropdown modal (contratto), Radio (verbale)
+   - Bottone primario "Elabora i miei diritti" disabilitato finché tutte le risposte non sono selezionate
+   - Schermata risultati con card personalizzate + disclaimer
+   - Raggiungibile da CTA nel Feature Detail "Diritti e Legge 104"
+
+4. **Percorso Guidato** (`app/percorso.tsx`)
    - 4-step wizard with progress bar
    - One question per step, single-select options
    - `Avanti` disabled until selection; `Concludi` on last step

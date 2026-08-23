@@ -7,7 +7,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
 import { FEATURES, FeatureId } from "@/src/data/mockData";
-
 export default function FeatureDetail() {
   const { id } = useLocalSearchParams<{ id: FeatureId }>();
   const router = useRouter();
@@ -133,6 +132,32 @@ export default function FeatureDetail() {
               </Text>
             </View>
           </View>
+
+          {feature.id === "diritti" && (
+            <Pressable
+              onPress={() => router.push("/valutazione")}
+              style={({ pressed }) => [
+                styles.assessCta,
+                pressed && { opacity: 0.9 },
+              ]}
+              accessibilityRole="button"
+              testID="feature-assessment-cta"
+            >
+              <View style={styles.flex}>
+                <Text style={styles.assessCtaTitle}>
+                  Valutazione Tutele e Permessi
+                </Text>
+                <Text style={styles.assessCtaBody}>
+                  3 domande per scoprire cosa puoi richiedere subito.
+                </Text>
+              </View>
+              <Ionicons
+                name="arrow-forward"
+                size={20}
+                color={colors.onBrandPrimary}
+              />
+            </Pressable>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -256,6 +281,28 @@ const styles = StyleSheet.create({
   helpBody: {
     fontSize: 13,
     color: colors.onBrandSecondary,
+    lineHeight: 18,
+  },
+
+  assessCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.brandPrimary,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    marginTop: spacing.md,
+    minHeight: 72,
+  },
+  assessCtaTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.onBrandPrimary,
+    marginBottom: 2,
+  },
+  assessCtaBody: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.85)",
     lineHeight: 18,
   },
 
