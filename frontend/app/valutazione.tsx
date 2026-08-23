@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,19 +15,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
-
-type AssistedOption =
-  | "Me stesso"
-  | "Genitore"
-  | "Figlio"
-  | "Coniuge/Partner";
-
-type ContractOption =
-  | "Dipendente Privato"
-  | "Dipendente Pubblico"
-  | "Autonomo";
-
-type VerbaleOption = "Sì" | "No" | "In corso di richiesta";
+import { ReportResults } from "@/src/components/ReportResults";
+import {
+  Answers,
+  AssistedOption,
+  ContractOption,
+  ITALIAN_REGIONS,
+  Region,
+  Report,
+  saveReport,
+  VerbaleOption,
+} from "@/src/lib/reports";
 
 const ASSISTED_OPTIONS: AssistedOption[] = [
   "Me stesso",
@@ -46,6 +46,8 @@ const VERBALE_OPTIONS: VerbaleOption[] = [
   "In corso di richiesta",
 ];
 
+type ModalKind = "contract" | "region" | null;
+
 export default function Valutazione() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -53,84 +55,45 @@ export default function Valutazione() {
   const [assisted, setAssisted] = useState<AssistedOption | null>(null);
   const [contract, setContract] = useState<ContractOption | null>(null);
   const [verbale, setVerbale] = useState<VerbaleOption | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [age, setAge] = useState("");
+  const [diagnosis, setDiagnosis] = useState("");
+  const [region, setRegion] = useState<Region | null>(null);
+  const [modal, setModal] = useState<ModalKind>(null);
+  const [savedReport, setSavedReport] = useState<Report | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const canSubmit = !!assisted && !!contract && !!verbale;
 
-  const results = useMemo(() => {
-    if (!assisted || !contract || !verbale) return [];
-    const list: { title: string; body: string }[] = [];
+  const modalOptions = useMemo(() => {
+    if (modal === "contract") return CONTRACT_OPTIONS as readonly string[];
+    if (modal === "region") return ITALIAN_REGIONS;
+    return [] as readonly string[];
+  }, [modal]);
 
-    if (verbale === "Sì") {
-      list.push({
-        title: "3 giorni di permesso mensile retribuito",
-        body:
-          assisted === "Me stesso"
-            ? "Puoi richiedere 3 giorni al mese di permesso retribuito per te stesso all'INPS."
-            : `Puoi richiedere 3 giorni al mese di permesso retribuito per assistere ${assisted.toLowerCase()}.`,
-      });
-      list.push({
-        title: "Agevolazioni fiscali",
-        body:
-          "Detrazione IRPEF del 19% sulle spese sanitarie, IVA agevolata al 4% su auto e ausili tecnici.",
-      });
-      if (assisted !== "Me stesso") {
-        list.push({
-          title: "Congedo straordinario retribuito",
-          body:
-            "Fino a 2 anni di congedo straordinario retribuito per assistenza a familiare disabile grave.",
-        });
-      }
-    } else if (verbale === "In corso di richiesta") {
-      list.push({
-        title: "Attesa del verbale",
-        body:
-          "La commissione medica ASL ha 90 giorni per rispondere (15 giorni per patologie oncologiche). Nel frattempo puoi già raccogliere la documentazione sanitaria.",
-      });
-      list.push({
-        title: "Presentazione al patronato",
-        body:
-          "Un patronato può assisterti gratuitamente nella pratica e in eventuali ricorsi.",
-      });
-    } else {
-      list.push({
-        title: "Come richiedere il verbale",
-        body:
-          "Chiedi al medico di base il certificato SS3 telematico e presenta domanda all'INPS. È il primo passo per accedere ai benefici della Legge 104.",
-      });
-    }
+  const handleSubmit = async () => {
+    if (!canSubmit || saving) return;
+    setSaving(true);
+    const answers: Answers = {
+      assisted: assisted!,
+      contract: contract!,
+      verbale: verbale!,
+      age: age.trim() || undefined,
+      diagnosis: diagnosis.trim() || undefined,
+      region: region ?? undefined,
+    };
+    const report = await saveReport(answers);
+    setSavedReport(report);
+    setSaving(false);
+  };
 
-    if (contract === "Dipendente Pubblico") {
-      list.push({
-        title: "Priorità sede di lavoro (Pubblico)",
-        body:
-          "Come dipendente pubblico hai diritto alla scelta prioritaria della sede di lavoro più vicina alla persona assistita.",
-      });
-    } else if (contract === "Dipendente Privato") {
-      list.push({
-        title: "Tutela contro trasferimenti (Privato)",
-        body:
-          "Non puoi essere trasferito senza consenso ad altra sede se sei beneficiario di Legge 104 art. 33.",
-      });
-    } else {
-      list.push({
-        title: "Autonomi: agevolazioni fiscali",
-        body:
-          "Come lavoratore autonomo non hai diritto ai permessi retribuiti, ma puoi accedere a detrazioni fiscali e contributi regionali per l'acquisto di ausili.",
-      });
-    }
-
-    return list;
-  }, [assisted, contract, verbale]);
-
-  if (submitted) {
+  // -------- Results screen --------
+  if (savedReport) {
     return (
       <SafeAreaView style={styles.safe} testID="valutazione-results">
         <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
         <View style={styles.header}>
           <Pressable
-            onPress={() => setSubmitted(false)}
+            onPress={() => setSavedReport(null)}
             style={styles.iconBtn}
             hitSlop={12}
             accessibilityLabel="Modifica risposte"
@@ -149,63 +112,17 @@ export default function Valutazione() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.resultsIntro}>
-            In base alle tue risposte, ecco cosa puoi richiedere adesso:
-          </Text>
-          {results.map((r, idx) => (
-            <View
-              key={r.title}
-              style={styles.resultCard}
-              testID={`valutazione-result-${idx}`}
-            >
-              <View style={styles.resultIcon}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={22}
-                  color={colors.brandPrimary}
-                />
-              </View>
-              <View style={styles.flex}>
-                <Text style={styles.resultTitle}>{r.title}</Text>
-                <Text style={styles.resultBody}>{r.body}</Text>
-              </View>
-            </View>
-          ))}
-
-          <View style={styles.disclaimer}>
-            <Ionicons
-              name="information-circle-outline"
-              size={18}
-              color={colors.onSurfaceTertiary}
-            />
-            <Text style={styles.disclaimerText}>
-              Queste indicazioni sono orientative. Per la tua situazione
-              specifica rivolgiti a un patronato o al tuo medico di base.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={() => router.replace("/")}
-            style={({ pressed }) => [
-              styles.primaryBtn,
-              { marginTop: spacing.lg },
-              pressed && { opacity: 0.85 },
-            ]}
-            testID="valutazione-home-button"
-            accessibilityRole="button"
-          >
-            <Text style={styles.primaryBtnText}>Torna alla home</Text>
-          </Pressable>
+          <ReportResults report={savedReport} showBackHint />
         </ScrollView>
       </SafeAreaView>
     );
   }
 
+  // -------- Form screen --------
   return (
     <SafeAreaView style={styles.safe} testID="valutazione-screen">
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
 
-      {/* Header */}
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
@@ -232,8 +149,8 @@ export default function Valutazione() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.subtitle}>
-          Rispondi a 3 brevi domande. Ti aiuteremo a capire quali diritti puoi
-          esercitare.
+          Rispondi alle prime 3 domande. Le informazioni extra sono opzionali
+          ma rendono i risultati più precisi.
         </Text>
 
         {/* Choice Chips */}
@@ -269,20 +186,18 @@ export default function Valutazione() {
           </View>
         </View>
 
-        {/* Dropdown */}
+        {/* Dropdown Contract */}
         <View style={styles.field} testID="field-contract">
           <Text style={styles.label}>Tipo di contratto di lavoro</Text>
           <Pressable
-            onPress={() => setDropdownOpen(true)}
+            onPress={() => setModal("contract")}
             style={({ pressed }) => [
               styles.dropdown,
               contract && styles.dropdownFilled,
               pressed && { opacity: 0.9 },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={
-              contract ?? "Seleziona il tipo di contratto"
-            }
+            accessibilityLabel={contract ?? "Seleziona il tipo di contratto"}
             testID="dropdown-contract"
           >
             <Text
@@ -301,7 +216,7 @@ export default function Valutazione() {
           </Pressable>
         </View>
 
-        {/* Radio */}
+        {/* Radio Verbale */}
         <View style={styles.field} testID="field-verbale">
           <Text style={styles.label}>Hai già un verbale di invalidità?</Text>
           <View style={styles.radioList}>
@@ -341,6 +256,90 @@ export default function Valutazione() {
             })}
           </View>
         </View>
+
+        {/* Optional extras */}
+        <View style={styles.extrasHeader}>
+          <View style={styles.extrasBadge}>
+            <Ionicons name="sparkles" size={12} color={colors.brandPrimary} />
+            <Text style={styles.extrasBadgeText}>Opzionale</Text>
+          </View>
+          <Text style={styles.extrasSubtitle}>
+            Aggiungi qualche dettaglio in più per risultati personalizzati
+            (bonus regionali, indennità per età, patologie specifiche).
+          </Text>
+        </View>
+
+        <View style={styles.field} testID="field-age">
+          <Text style={styles.label}>Età della persona assistita</Text>
+          <View
+            style={[
+              styles.inputWrap,
+              age.length > 0 && styles.inputWrapFilled,
+            ]}
+          >
+            <TextInput
+              style={styles.input}
+              placeholder="Es. 45"
+              placeholderTextColor={colors.muted}
+              keyboardType="number-pad"
+              maxLength={3}
+              value={age}
+              onChangeText={setAge}
+              testID="input-age"
+              accessibilityLabel="Età in anni"
+            />
+          </View>
+        </View>
+
+        <View style={styles.field} testID="field-diagnosis">
+          <Text style={styles.label}>Patologia o diagnosi</Text>
+          <View
+            style={[
+              styles.inputWrap,
+              diagnosis.length > 0 && styles.inputWrapFilled,
+            ]}
+          >
+            <TextInput
+              style={styles.input}
+              placeholder="Es. malattia rara, oncologica, ecc."
+              placeholderTextColor={colors.muted}
+              value={diagnosis}
+              onChangeText={setDiagnosis}
+              testID="input-diagnosis"
+              accessibilityLabel="Patologia o diagnosi"
+              returnKeyType="done"
+            />
+          </View>
+        </View>
+
+        <View style={styles.field} testID="field-region">
+          <Text style={styles.label}>Regione di residenza</Text>
+          <Pressable
+            onPress={() => setModal("region")}
+            style={({ pressed }) => [
+              styles.dropdown,
+              region && styles.dropdownFilled,
+              pressed && { opacity: 0.9 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={region ?? "Seleziona la tua regione"}
+            testID="dropdown-region"
+          >
+            <Text
+              style={[
+                styles.dropdownText,
+                !region && styles.dropdownPlaceholder,
+              ]}
+            >
+              {region ?? "Seleziona la tua regione"}
+            </Text>
+            <Ionicons
+              name="chevron-down"
+              size={20}
+              color={colors.onSurfaceTertiary}
+            />
+          </Pressable>
+        </View>
       </ScrollView>
 
       {/* Sticky bottom CTA */}
@@ -351,12 +350,12 @@ export default function Valutazione() {
         ]}
       >
         <Pressable
-          onPress={() => setSubmitted(true)}
-          disabled={!canSubmit}
+          onPress={handleSubmit}
+          disabled={!canSubmit || saving}
           style={({ pressed }) => [
             styles.primaryBtn,
-            !canSubmit && styles.primaryBtnDisabled,
-            canSubmit && pressed && { opacity: 0.85 },
+            (!canSubmit || saving) && styles.primaryBtnDisabled,
+            canSubmit && !saving && pressed && { opacity: 0.85 },
           ]}
           accessibilityRole="button"
           accessibilityState={{ disabled: !canSubmit }}
@@ -368,9 +367,9 @@ export default function Valutazione() {
               !canSubmit && styles.primaryBtnTextDisabled,
             ]}
           >
-            Elabora i miei diritti
+            {saving ? "Elaborazione…" : "Elabora i miei diritti"}
           </Text>
-          {canSubmit && (
+          {canSubmit && !saving && (
             <Ionicons
               name="arrow-forward"
               size={18}
@@ -382,55 +381,76 @@ export default function Valutazione() {
 
       {/* Dropdown Modal */}
       <Modal
-        visible={dropdownOpen}
+        visible={modal !== null}
         transparent
         animationType="fade"
-        onRequestClose={() => setDropdownOpen(false)}
+        onRequestClose={() => setModal(null)}
       >
         <Pressable
           style={styles.modalBackdrop}
-          onPress={() => setDropdownOpen(false)}
+          onPress={() => setModal(null)}
         >
           <Pressable
-            style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.lg }]}
+            style={[
+              styles.modalSheet,
+              { paddingBottom: insets.bottom + spacing.lg },
+            ]}
             onPress={(e) => e.stopPropagation()}
           >
             <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Tipo di contratto</Text>
-            {CONTRACT_OPTIONS.map((opt, idx) => {
-              const isSel = contract === opt;
-              return (
-                <Pressable
-                  key={opt}
-                  onPress={() => {
-                    setContract(opt);
-                    setDropdownOpen(false);
-                  }}
-                  style={({ pressed }) => [
-                    styles.modalItem,
-                    idx !== CONTRACT_OPTIONS.length - 1 && styles.modalItemDivider,
-                    pressed && { opacity: 0.7 },
-                  ]}
-                  testID={`option-contract-${opt}`}
-                >
-                  <Text
-                    style={[
-                      styles.modalItemText,
-                      isSel && styles.modalItemTextSelected,
+            <Text style={styles.modalTitle}>
+              {modal === "contract" ? "Tipo di contratto" : "Regione"}
+            </Text>
+            <ScrollView
+              style={{ maxHeight: 380 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {modalOptions.map((opt, idx) => {
+                const isSel =
+                  modal === "contract"
+                    ? contract === opt
+                    : region === (opt as Region);
+                return (
+                  <Pressable
+                    key={opt}
+                    onPress={() => {
+                      if (modal === "contract") {
+                        setContract(opt as ContractOption);
+                      } else if (modal === "region") {
+                        setRegion(opt as Region);
+                      }
+                      setModal(null);
+                    }}
+                    style={({ pressed }) => [
+                      styles.modalItem,
+                      idx !== modalOptions.length - 1 && styles.modalItemDivider,
+                      pressed && { opacity: 0.7 },
                     ]}
+                    testID={
+                      modal === "contract"
+                        ? `option-contract-${opt}`
+                        : `option-region-${opt}`
+                    }
                   >
-                    {opt}
-                  </Text>
-                  {isSel && (
-                    <Ionicons
-                      name="checkmark"
-                      size={20}
-                      color={colors.brandPrimary}
-                    />
-                  )}
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.modalItemText,
+                        isSel && styles.modalItemTextSelected,
+                      ]}
+                    >
+                      {opt}
+                    </Text>
+                    {isSel && (
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={colors.brandPrimary}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -589,6 +609,59 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
+  // Input
+  inputWrap: {
+    minHeight: 56,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    justifyContent: "center",
+  },
+  inputWrapFilled: {
+    borderColor: colors.brandPrimary,
+    backgroundColor: colors.surface,
+  },
+  input: {
+    fontSize: 16,
+    color: colors.onSurface,
+    padding: 0,
+    ...Platform.select({ web: { outlineStyle: "none" } as any, default: {} }),
+  },
+
+  // Optional extras header
+  extrasHeader: {
+    marginBottom: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  extrasBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    alignSelf: "flex-start",
+    backgroundColor: colors.brandSecondary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
+  extrasBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.brandPrimary,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  extrasSubtitle: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.onSurfaceTertiary,
+  },
+
   // Bottom bar
   bottomBar: {
     position: "absolute",
@@ -668,51 +741,5 @@ const styles = StyleSheet.create({
   modalItemTextSelected: {
     color: colors.brandPrimary,
     fontWeight: "700",
-  },
-
-  // Results
-  resultsIntro: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.onSurfaceSecondary,
-    marginBottom: spacing.lg,
-  },
-  resultCard: {
-    flexDirection: "row",
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  resultIcon: {
-    marginTop: 2,
-  },
-  resultTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.onSurface,
-    marginBottom: 4,
-  },
-  resultBody: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.onSurfaceSecondary,
-  },
-  disclaimer: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    backgroundColor: colors.surfaceSecondary,
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-    marginTop: spacing.md,
-  },
-  disclaimerText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 19,
-    color: colors.onSurfaceTertiary,
   },
 });

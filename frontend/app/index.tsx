@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,16 +14,31 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
 import { FEATURES, SEARCH_SUGGESTIONS } from "@/src/data/mockData";
+import { getReports, Report } from "@/src/lib/reports";
 
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const [reports, setReports] = useState<Report[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      (async () => {
+        const list = await getReports();
+        if (mounted) setReports(list);
+      })();
+      return () => {
+        mounted = false;
+      };
+    }, []),
+  );
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -151,6 +166,55 @@ export default function Home() {
               </View>
             )}
           </View>
+
+          {/* Saved evaluations */}
+          {reports.length > 0 && (
+            <View style={styles.savedSection} testID="home-saved-section">
+              <Text style={styles.sectionTitle}>Le tue valutazioni</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.savedRow}
+              >
+                {reports.map((r, idx) => {
+                  const date = new Date(r.createdAt).toLocaleDateString(
+                    "it-IT",
+                    { day: "2-digit", month: "short" },
+                  );
+                  return (
+                    <Pressable
+                      key={r.id}
+                      onPress={() =>
+                        router.push(`/storico/${r.id}` as any)
+                      }
+                      style={({ pressed }) => [
+                        styles.savedCard,
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      testID={`saved-report-${idx}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Valutazione del ${date}`}
+                    >
+                      <View style={styles.savedIcon}>
+                        <Ionicons
+                          name="document-text"
+                          size={20}
+                          color={colors.brandPrimary}
+                        />
+                      </View>
+                      <Text style={styles.savedDate}>{date}</Text>
+                      <Text style={styles.savedTitle} numberOfLines={1}>
+                        {r.answers.assisted}
+                      </Text>
+                      <Text style={styles.savedMeta}>
+                        {r.rights.length} diritti
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Section title */}
           <Text style={styles.sectionTitle} testID="home-section-title">
@@ -363,6 +427,47 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1.2,
     marginBottom: spacing.md,
+  },
+
+  savedSection: {
+    marginBottom: spacing.xl,
+  },
+  savedRow: {
+    gap: spacing.md,
+    paddingRight: spacing.lg,
+  },
+  savedCard: {
+    width: 160,
+    backgroundColor: colors.brandSecondary,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: 4,
+  },
+  savedIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+  },
+  savedDate: {
+    fontSize: 11,
+    color: colors.onBrandSecondary,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  savedTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.onBrandSecondary,
+  },
+  savedMeta: {
+    fontSize: 12,
+    color: colors.onSurfaceTertiary,
+    marginTop: 2,
   },
 
   featureList: {

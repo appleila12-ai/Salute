@@ -17,12 +17,19 @@ Mobile dashboard (Italian) for a health navigation app. Empathetic, highly acces
    - Help card at bottom
 
 3. **Valutazione Tutele e Permessi** (`app/valutazione.tsx`)
-   - Questionario a 3 domande: ChoiceChips (chi assisti), Dropdown modal (contratto), Radio (verbale)
-   - Bottone primario "Elabora i miei diritti" disabilitato finché tutte le risposte non sono selezionate
-   - Schermata risultati con card personalizzate + disclaimer
-   - Raggiungibile da CTA nel Feature Detail "Diritti e Legge 104"
+   - Questionario a 3 domande obbligatorie: ChoiceChips (chi assisti), Dropdown modal (contratto), Radio (verbale)
+   - Sezione "Opzionale": Età, Patologia/Diagnosi, Regione (dropdown 20 regioni) per risultati personalizzati (indennità frequenza <18, accompagnamento 65+, corsia oncologica, malattie rare, bonus regionali)
+   - Salvataggio automatico del report nello storage locale
+   - Schermata risultati con card categorizzate (Permessi/Fiscale/Lavoro/Iter/Regionale/Su misura), bottone "Scarica o Condividi PDF" (expo-print + expo-sharing) e blocco "I prossimi passi ufficiali" con CTA "Cerca il Patronato più vicino"
 
-4. **Percorso Guidato** (`app/percorso.tsx`)
+4. **Storico valutazioni** (`app/storico/[id].tsx`)
+   - Ripristina un report salvato, mostra risultati e permette eliminazione
+   - Accessibile dalla home nella sezione "Le tue valutazioni"
+
+5. **Patronati** (`app/patronato.tsx`)
+   - Lista mock con distanza, indirizzo, orari e bottoni "Chiama" (tel:) e "Mappa" (Apple/Google Maps)
+
+6. **Percorso Guidato** (`app/percorso.tsx`)
    - 4-step wizard with progress bar
    - One question per step, single-select options
    - `Avanti` disabled until selection; `Concludi` on last step
