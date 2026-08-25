@@ -1,12 +1,13 @@
-// TutelApp brand components: Logo (hand supporting a heart — care & protection)
-// and Wordmark. Composed with react-native Views + vector icons (no SVG dep).
+// TutelApp brand components — logo ufficiale (nodo triangolare teal)
+// fornito dall'utente: assets/images/brand/mark.png + lockup.png.
 
 import React from "react";
-import { StyleSheet, Text, View, ViewStyle } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Image, ImageStyle, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 import { colors } from "@/src/theme";
+
+const MARK = require("../../assets/images/brand/mark.png");
+const LOCKUP = require("../../assets/images/brand/lockup.png");
 
 interface LogoProps {
   size?: number;
@@ -14,41 +15,9 @@ interface LogoProps {
   variant?: "solid" | "soft";
 }
 
-/**
- * Logo mark: a hand supporting a heart (cura e tutela).
- * `solid` = filled gradient (used on Home hero / white backgrounds).
- * `soft`  = light tinted background (used inline next to wordmark).
- */
+/** Logo mark ufficiale (immagine). Le due varianti differiscono solo per il bordo. */
 export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
-  const borderRadius = size * 0.32;
-  const iconSize = Math.round(size * 0.62);
-
-  if (variant === "soft") {
-    return (
-      <View
-        style={[
-          {
-            width: size,
-            height: size,
-            borderRadius,
-            backgroundColor: colors.brandSecondary,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1.5,
-            borderColor: "rgba(42,117,211,0.18)",
-          },
-          style,
-        ]}
-      >
-        <MaterialCommunityIcons
-          name="hand-heart"
-          size={iconSize}
-          color={colors.brandPrimary}
-        />
-      </View>
-    );
-  }
-
+  const borderRadius = size * 0.28;
   return (
     <View
       style={[
@@ -57,59 +26,39 @@ export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
           height: size,
           borderRadius,
           overflow: "hidden",
+          backgroundColor: "#EEF1F6",
+          borderWidth: variant === "soft" ? 1.5 : 0,
+          borderColor: "rgba(42,117,211,0.18)",
+        },
+        variant === "solid" && {
           shadowColor: colors.brandPrimaryDark,
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.18,
-          shadowRadius: 12,
-          elevation: 4,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.14,
+          shadowRadius: 10,
+          elevation: 3,
         },
         style,
       ]}
     >
-      <LinearGradient
-        colors={[colors.brandPrimary, colors.brandPrimaryDark]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+      <Image
+        source={MARK}
         style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+        accessibilityLabel="Logo TutelApp"
       />
-      {/* warm accent glow behind the heart */}
-      <View
-        style={{
-          position: "absolute",
-          top: size * 0.12,
-          alignSelf: "center",
-          width: size * 0.42,
-          height: size * 0.42,
-          borderRadius: size * 0.21,
-          backgroundColor: "rgba(245,158,11,0.28)",
-        }}
-      />
-      {/* subtle inner highlight */}
-      <View
-        style={{
-          position: "absolute",
-          top: size * 0.08,
-          left: size * 0.14,
-          right: size * 0.4,
-          height: size * 0.12,
-          borderRadius: size * 0.1,
-          backgroundColor: "rgba(255,255,255,0.14)",
-        }}
-      />
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <MaterialCommunityIcons
-          name="hand-heart"
-          size={iconSize}
-          color="#FFFFFF"
-        />
-      </View>
     </View>
+  );
+}
+
+/** Lockup completo (logo + nome + payoff) — usato nella Home. */
+export function BrandLockup({ style }: { style?: ImageStyle }) {
+  return (
+    <Image
+      source={LOCKUP}
+      style={[styles.lockup, style]}
+      resizeMode="cover"
+      accessibilityLabel="TutelApp — La tua guida semplice ai diritti e alla Legge 104"
+    />
   );
 }
 
@@ -121,9 +70,7 @@ interface WordmarkProps {
   style?: ViewStyle;
 }
 
-/**
- * Full brand lockup: Logo + "TutelApp" wordmark. Used in Home header + hero.
- */
+/** Logo + "TutelApp" testuale. Usato nell'header. */
 export function Wordmark({
   size = "md",
   color = colors.onSurface,
@@ -159,5 +106,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  lockup: {
+    width: "100%",
+    height: 158,
+    borderRadius: 16,
   },
 });

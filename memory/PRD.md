@@ -104,3 +104,10 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - IMMAGINI: hero empatica in home ("Nessuno dovrebbe orientarsi da solo"), immagini nei 3 step del wizard (diagnosi/lavoro/certificato), banner nelle macro-categorie; tutte con angoli arrotondati 12-16, palette invariata — src/lib/images.ts (Unsplash CDN)
 - Refactor: PracticalHelpSection eliminato → logica in src/lib/territorio.ts
 - Verificato con screenshot E2E su home, wizard, risultati, patronati e territorio
+
+## Iterazione 9 (Giugno 2026) — Logo ufficiale + mono + ordine home
+- LOGO UFFICIALE dell'utente (nodo triangolare teal) integrato: assets/images/brand/mark.png (ritaglio quadrato) e lockup.png (logo+nome+payoff); Brand.tsx riscritto → Logo/Wordmark usano il mark, nuovo BrandLockup usato nella home al posto di titolo/sottotitolo
+- "Inizia il percorso" SPOSTATO SOTTO la card "Il Percorso" in home (ordine: hero foto → lockup → desc → regione → percorso → inizia → storico → sostegno)
+- IMMAGINI MONOCOLORE: Unsplash con &sat=-100 (grigio lato CDN) + velo blu brand — nuovo componente MonoImage usato in wizard (3 step), card territorio, entry-card risultati; gli hero ImageBackground diventano mono con l'overlay esistente
+- NESSUN DEPLOY effettuato (richiesta esplicita utente)
+- Verificato con screenshot: home, wizard, percorso

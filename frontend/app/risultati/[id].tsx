@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -21,6 +20,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
 import { IMAGES } from "@/src/lib/images";
+import { MonoImage } from "@/src/components/MonoImage";
 import { NextStepsSection } from "@/src/components/NextStepsSection";
 import { DeadlineCard } from "@/src/components/DeadlineCard";
 import { VaultSection } from "@/src/components/VaultSection";
@@ -194,10 +194,10 @@ export default function Risultati() {
             accessibilityRole="button"
             testID="results-patronati-link"
           >
-            <Image
-              source={{ uri: IMAGES.patronati }}
-              style={styles.linkBannerImage}
-              resizeMode="cover"
+            <MonoImage
+              uri={IMAGES.patronati}
+              height={96}
+              radius={0}
             />
             <View style={styles.linkBannerBody}>
               <View style={styles.flex}>
@@ -228,10 +228,10 @@ export default function Risultati() {
             accessibilityRole="button"
             testID="results-territorio-link"
           >
-            <Image
-              source={{ uri: IMAGES.territorio }}
-              style={styles.linkBannerImage}
-              resizeMode="cover"
+            <MonoImage
+              uri={IMAGES.territorio}
+              height={96}
+              radius={0}
             />
             <View style={styles.linkBannerBody}>
               <View style={styles.flex}>
@@ -467,11 +467,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: "hidden",
     marginBottom: spacing.md,
-  },
-  linkBannerImage: {
-    width: "100%",
-    height: 96,
-    backgroundColor: colors.surfaceSecondary,
   },
   linkBannerBody: {
     flexDirection: "row",

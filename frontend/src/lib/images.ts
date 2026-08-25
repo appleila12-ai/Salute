@@ -2,7 +2,7 @@
 // Angoli arrotondati applicati dai componenti (radius 12-16).
 
 const U = (id: string, w = 900) =>
-  `https://images.unsplash.com/${id}?w=${w}&q=65&auto=format&fit=crop`;
+  `https://images.unsplash.com/${id}?w=${w}&q=65&auto=format&fit=crop&sat=-100`;
 
 export const IMAGES = {
   /** Home hero — mani che si sostengono, cura familiare */

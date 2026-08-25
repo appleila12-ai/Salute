@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +15,7 @@ import { useRouter } from "expo-router";
 
 import { colors, radius, spacing, topics } from "@/src/theme";
 import { IMAGES } from "@/src/lib/images";
+import { MonoImage } from "@/src/components/MonoImage";
 import {
   Answers,
   CertOption,
@@ -129,10 +129,10 @@ export default function Wizard() {
         >
           {step === 1 && (
             <View testID="step-1">
-              <Image
-                source={{ uri: IMAGES.wizardDiagnosi }}
+              <MonoImage
+                uri={IMAGES.wizardDiagnosi}
+                height={120}
                 style={styles.stepImage}
-                resizeMode="cover"
               />
               <View style={styles.stepIconWrap}>
                 <View style={[styles.stepIcon, { backgroundColor: topics.legge104.soft }]}>
@@ -192,10 +192,10 @@ export default function Wizard() {
 
           {step === 2 && (
             <View testID="step-2">
-              <Image
-                source={{ uri: IMAGES.wizardLavoro }}
+              <MonoImage
+                uri={IMAGES.wizardLavoro}
+                height={120}
                 style={styles.stepImage}
-                resizeMode="cover"
               />
               <View style={styles.stepIconWrap}>
                 <View style={[styles.stepIcon, { backgroundColor: topics.lavoro.soft }]}>
@@ -230,10 +230,10 @@ export default function Wizard() {
 
           {step === 3 && (
             <View testID="step-3">
-              <Image
-                source={{ uri: IMAGES.wizardCertificato }}
+              <MonoImage
+                uri={IMAGES.wizardCertificato}
+                height={120}
                 style={styles.stepImage}
-                resizeMode="cover"
               />
               <View style={styles.stepIconWrap}>
                 <View style={[styles.stepIcon, { backgroundColor: topics.documenti.soft }]}>
@@ -432,10 +432,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   stepImage: {
-    width: "100%",
-    height: 120,
-    borderRadius: 16,
-    backgroundColor: colors.surfaceSecondary,
     marginBottom: spacing.md,
   },
   partnerNote: {

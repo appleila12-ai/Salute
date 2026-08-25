@@ -14,11 +14,11 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 
-import { brand, colors, radius, spacing } from "@/src/theme";
+import { colors, radius, spacing } from "@/src/theme";
 import { storage } from "@/src/utils/storage";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useCloudSync } from "@/src/contexts/CloudSyncContext";
-import { Logo, Wordmark } from "@/src/components/Brand";
+import { Wordmark, BrandLockup } from "@/src/components/Brand";
 import { GuideStepsCard } from "@/src/components/NextStepsSection";
 import { formatDate, listReports, Report } from "@/src/lib/reports";
 import { IMAGES } from "@/src/lib/images";
@@ -210,15 +210,9 @@ export default function Home() {
           </Text>
         </ImageBackground>
 
-        {/* Hero */}
-        <View style={styles.hero}>
-          <Logo size={72} variant="solid" style={{ marginBottom: spacing.md }} />
-          <Text style={styles.title} testID="home-title">
-            {brand.name}
-          </Text>
-          <Text style={styles.subtitle}>
-            {brand.tagline}
-          </Text>
+        {/* Branding — lockup ufficiale */}
+        <View style={styles.hero} testID="home-title">
+          <BrandLockup />
         </View>
 
         <View style={styles.descBox}>
@@ -254,6 +248,12 @@ export default function Home() {
           </View>
         </Pressable>
 
+        {/* Il Percorso — mappa dei 5 passi dell'iter */}
+        <View style={styles.guideWrap}>
+          <GuideStepsCard />
+        </View>
+
+        {/* Inizia il percorso — subito sotto la mappa del percorso */}
         <Pressable
           onPress={() => router.push("/valutazione")}
           style={({ pressed }) => [
@@ -267,11 +267,6 @@ export default function Home() {
           <Text style={styles.startBtnText}>Inizia il percorso</Text>
           <Ionicons name="arrow-forward" size={22} color={colors.onBrandPrimary} />
         </Pressable>
-
-        {/* Il Percorso — mappa dei 5 passi dell'iter */}
-        <View style={styles.guideWrap}>
-          <GuideStepsCard />
-        </View>
 
         <View style={styles.spacer} />
 
@@ -604,8 +599,8 @@ const styles = StyleSheet.create({
   },
 
   hero: {
-    alignItems: "center",
     marginTop: spacing.md,
+    marginBottom: spacing.xs,
   },
   heroImage: {
     height: 150,

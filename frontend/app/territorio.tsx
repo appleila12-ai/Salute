@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  Image,
   ImageBackground,
   Linking,
   Platform,
@@ -24,6 +23,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { colors, radius, spacing } from "@/src/theme";
 import { storage } from "@/src/utils/storage";
 import { IMAGES } from "@/src/lib/images";
+import { MonoImage } from "@/src/components/MonoImage";
 import {
   buildGuideHtml,
   getHelpCards,
@@ -161,11 +161,7 @@ export default function Territorio() {
             style={[styles.card, { borderLeftColor: c.color }]}
             testID={`territorio-card-${c.id}`}
           >
-            <Image
-              source={{ uri: c.image }}
-              style={styles.cardImage}
-              resizeMode="cover"
-            />
+            <MonoImage uri={c.image} height={120} radius={0} />
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
                 <View style={[styles.cardIcon, { backgroundColor: c.soft }]}>
@@ -312,11 +308,6 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     marginBottom: spacing.md,
     overflow: "hidden",
-  },
-  cardImage: {
-    width: "100%",
-    height: 120,
-    backgroundColor: colors.surfaceSecondary,
   },
   cardBody: {
     padding: spacing.lg,
