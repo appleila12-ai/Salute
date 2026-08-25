@@ -1,18 +1,24 @@
-// Immagine monocolore (duotone blu): foto desaturata lato CDN (+sat=-100)
-// con velo blu del brand sopra. Angoli arrotondati.
+// Illustrazione brand con velo blu leggerissimo per uniformare le tonalità.
+// Angoli arrotondati.
 
-import { Image, StyleSheet, View, ViewStyle } from "react-native";
+import {
+  Image,
+  ImageSourcePropType,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from "react-native";
 
 import { colors } from "@/src/theme";
 
 interface Props {
-  uri: string;
+  source: ImageSourcePropType;
   height: number;
   radius?: number;
   style?: ViewStyle;
 }
 
-export function MonoImage({ uri, height, radius = 16, style }: Props) {
+export function MonoImage({ source, height, radius = 16, style }: Props) {
   return (
     <View
       style={[
@@ -25,11 +31,7 @@ export function MonoImage({ uri, height, radius = 16, style }: Props) {
         style,
       ]}
     >
-      <Image
-        source={{ uri }}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      />
+      <Image source={source} style={StyleSheet.absoluteFill} resizeMode="cover" />
       <View style={[StyleSheet.absoluteFill, styles.tint]} />
     </View>
   );
@@ -37,6 +39,6 @@ export function MonoImage({ uri, height, radius = 16, style }: Props) {
 
 const styles = StyleSheet.create({
   tint: {
-    backgroundColor: "rgba(42,117,211,0.28)",
+    backgroundColor: "rgba(42,117,211,0.06)",
   },
 });

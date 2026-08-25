@@ -1,48 +1,54 @@
 {
-  "app_name": "SaluteNav",
-  "personality": "1 iOS-Native Clean (Adapted for maximum empathy and accessibility)",
-  "personality_one_liner": "A clean, highly accessible, and deeply empathetic health navigation companion that prioritizes clarity and calm over visual noise.",
+  "app_name": "TutelApp",
+  "personality": "1 iOS-Native Clean fushed with highly accessible, warm, and empathetic styling.",
+  "personality_one_liner": "A clear, reassuring, and highly legible guide that uses calm colors and empathetic visuals to reduce anxiety around bureaucracy for elderly and stressed users.",
   "color": {
     "surface": "#FFFFFF",
-    "onSurface": "#111827",
-    "surfaceSecondary": "#F4F7FA",
-    "onSurfaceSecondary": "#1F2937",
-    "surfaceTertiary": "#E5E9F0",
-    "onSurfaceTertiary": "#374151",
-    "surfaceInverse": "#1E3A5F",
+    "onSurface": "#0F172A",
+    "surfaceSecondary": "#F8FAFC",
+    "onSurfaceSecondary": "#1E293B",
+    "surfaceTertiary": "#F0FDF4", 
+    "onSurfaceTertiary": "#14532D",
+    "surfaceInverse": "#0F172A",
     "onSurfaceInverse": "#FFFFFF",
-    "brand": "#2C6496",
-    "brandPrimary": "#2C6496",
+    "brand": "#2A75D3",
+    "brandPrimary": "#2A75D3",
     "onBrandPrimary": "#FFFFFF",
-    "brandSecondary": "#EBF2FA",
-    "onBrandSecondary": "#1A4971",
-    "brandTertiary": "#D1E3F5",
-    "onBrandTertiary": "#153B5C",
-    "success": "#059669",
+    "brandSecondary": "#F59E0B",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "#E0F2FE",
+    "onBrandTertiary": "#0369A1",
+    "success": "#22C55E",
     "onSuccess": "#FFFFFF",
-    "warning": "#D97706",
+    "warning": "#F59E0B",
     "onWarning": "#FFFFFF",
-    "error": "#DC2626",
+    "error": "#EF4444",
     "onError": "#FFFFFF",
-    "info": "#2563EB",
+    "info": "#3B82F6",
     "onInfo": "#FFFFFF",
-    "border": "#E5E7EB",
-    "borderStrong": "#9CA3AF",
-    "divider": "#F3F4F6"
+    "border": "#E2E8F0",
+    "borderStrong": "#CBD5E1",
+    "divider": "#F1F5F9",
+    "topic_invalidita": "#8B5CF6",
+    "topic_esenzioni": "#10B981",
+    "topic_lavoro": "#F97316",
+    "topic_documenti": "#F59E0B",
+    "topic_salute_territorio": "#14B8A6",
+    "topic_patronato": "#D946EF"
   },
   "typography": {
     "displayFontFamily": "Plus Jakarta Sans",
     "textFontFamily": "Plus Jakarta Sans",
     "scale": {
-      "sm": 12,
-      "base": 14,
-      "lg": 16,
-      "xl": 20,
-      "2xl": 24
+      "sm": 14,
+      "base": 16,
+      "lg": 18,
+      "xl": 22,
+      "2xl": 28
     }
   },
   "spacing": {
-    "rule": "Generous padding everywhere to ensure large touch targets and uncluttered reading for older adults or those with accessibility needs.",
+    "rule": "Generous spacing to prevent cognitive overload. Cards must never touch edges (use lg/xl margins). Clear separation between sections.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -52,22 +58,18 @@
     "3xl": 48
   },
   "radius_tokens": {
-    "sm": 6,
+    "sm": 8,
     "md": 12,
-    "lg": 20,
+    "lg": 16,
     "pill": 999
   },
   "shadow_tier": "1",
   "navigation": "stack_only",
   "icon_set": "Phosphor",
   "glassmorphism": {
-    "enabled": "true",
-    "do's": [
-      "Use blur on bottom sheet headers and fixed elements over scrolling content."
-    ],
-    "dont's": [
-      "Do not use on primary content cards or text backgrounds to preserve high contrast."
-    ]
+    "enabled": "false",
+    "do's": [],
+    "dont's": ["Avoid glassmorphism. This app requires maximum clarity, legibility, and high contrast for elderly users. Stick to solid elevated surfaces."]
   },
   "platform_libraries": {
     "glass": {
@@ -83,55 +85,60 @@
   },
   "screens": [
     {
-      "name": "Home Dashboard",
-      "purpose": "A calm, reassuring entry point that immediately offers help via search, clear core features, and a guided path for newly diagnosed patients.",
+      "name": "Home",
+      "purpose": "A reassuring dashboard guiding the user through their rights.",
       "states": {
-        "loading": "Centered brand-colored spinner with subtle text 'Caricamento...'",
-        "empty": "Not applicable for dashboard.",
-        "error": "Soft error banner with 'Riprova' button."
+        "loading": "Centered brand spinner (#2A75D3)",
+        "empty": "Empty history list with a supportive message and a 'Start Path' CTA.",
+        "error": "Readable text with a large retry button."
       },
-      "layout": "Top Header with large greeting 'Come possiamo aiutarti oggi?' and an inclusive tone. Followed by a prominent Search Bar (surfaceTertiary) that is keyboard accessible. Main content is a vertical list of 4 large feature cards (Diritti e Legge 104, Dopo la Diagnosi, Telemedicina e Consulti, Community e Supporto) rather than a tight grid, to ensure text is large, contrast is high (WCAG AA), and touch targets are massive. Each card has a leading Phosphor icon tinted in brandPrimary inside a brandSecondary rounded square. At the bottom, a sticky or prominent hero banner for 'Hai appena ricevuto una diagnosi?' using the abstract blue wave image with a top-to-bottom dark gradient scrim to ensure the 'Inizia il Percorso Guidato' CTA and text have perfect contrast."
+      "layout": "Hero photo with a blue duotone effect at the top. Below, a clean white card for region selection. The 'Il Percorso' 5-step timeline must be highly tactile (large connected dots). The 'Inizia' button must be sticky at the bottom or massive in the center. Use cards with subtle shadow (tier 1) and 16px radius for 'Contatti Utili' and history."
     },
     {
-      "name": "Feature Detail Screens",
-      "purpose": "Dedicated content screens for the 4 main sections.",
+      "name": "Wizard",
+      "purpose": "Step-by-step diagnostic input.",
       "states": {
-        "loading": "Skeleton text blocks.",
-        "empty": "Empathetic illustration with 'Nessun contenuto disponibile al momento.'",
-        "error": "Readable message + Retry button."
-      },
-      "layout": "Standard content layout. Large header image (using the empathetic healthcare image) with gradient scrim and back button. Content flows below with generous typography (line height 1.5x) and clear bullet points."
-    },
-    {
-      "name": "Guided Percorso Onboarding",
-      "purpose": "A multi-step, empathetic onboarding flow for newly diagnosed patients to find exactly what they need.",
-      "states": {
-        "loading": "Progress bar loading.",
+        "loading": "Skeleton loader for the questions.",
         "empty": "N/A",
-        "error": "Error loading step, 'Riprova'."
+        "error": "Inline red alert banner."
       },
-      "layout": "Full-bleed soft surface background. One clear question per screen. Large, easy-to-tap selectable pills/cards. Sticky CTA at the bottom ('Avanti') over a glass or solid bottom container."
+      "layout": "Header images (monochrome blue) for context. Large, highly visible inputs and selectors (min 48pt height). Warning banners should have soft tinted backgrounds (`surfaceTertiary`). Bottom-sticky Next buttons."
+    },
+    {
+      "name": "Results",
+      "purpose": "Present the user's rights clearly based on the wizard.",
+      "states": {
+        "loading": "Brand colored spinner.",
+        "empty": "N/A",
+        "error": "Error card with a retry button."
+      },
+      "layout": "Empathetic intro text. A distinct 90-day deadline card. Use the specified topic colors (purple, green, orange, amber, teal, magenta) exclusively for badges, side-borders of cards, or tinted icon backgrounds to differentiate subjects without overwhelming the screen. AI assistant card must look approachable."
     }
   ],
   "images": {
-    "bottom_banner_wave": {
-      "url": "https://images.unsplash.com/photo-1687197180710-b2b9484a3c5f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMHNvZnQlMjBibHVlJTIwd2F2ZSUyMGJhY2tncm91bmQlMjBjYWxtaW5nfGVufDB8fHx8MTc4NzQ5MTgxNnww&ixlib=rb-4.1.0&q=85",
-      "dark": "https://images.unsplash.com/photo-1724405143873-cdaa5cac918e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMHNvZnQlMjBibHVlJTIwd2F2ZSUyMGJhY2tncm91bmQlMjBjYWxtaW5nfGVufDB8fHx8MTc4NzQ5MTgxNnww&ixlib=rb-4.1.0&q=85",
-      "alt": "Abstract calming blue wave"
+    "home_hero": {
+      "url": "https://images.pexels.com/photos/18429371/pexels-photo-18429371.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "dark": "https://images.pexels.com/photos/18429371/pexels-photo-18429371.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "A caregiver talking with an elderly woman, warm and empathetic"
     },
-    "empathetic_healthcare_header": {
-      "url": "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwxfHxlbXBhdGhldGljJTIwaGVhbHRoY2FyZSUyMHBhdGllbnQlMjBkb2N0b3IlMjBzdXBwb3J0fGVufDB8fHx8MTc4NzQ5MTgxNnww&ixlib=rb-4.1.0&q=85",
-      "dark": "https://images.unsplash.com/photo-1581056771107-24ca5f033842?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwyfHxlbXBhdGhldGljJTIwaGVhbHRoY2FyZSUyMHBhdGllbnQlMjBkb2N0b3IlMjBzdXBwb3J0fGVufDB8fHx8MTc4NzQ5MTgxNnww&ixlib=rb-4.1.0&q=85",
-      "alt": "Empathetic doctor supporting a patient"
+    "wizard_header": {
+      "url": "https://images.unsplash.com/photo-1638202993928-7267aad84c31?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHxtZWRpY2FsJTIwY29uc3VsdGF0aW9ufGVufDB8fHx8MTc4NzY3MjY0M3ww&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1638202993928-7267aad84c31?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHxtZWRpY2FsJTIwY29uc3VsdGF0aW9ufGVufDB8fHx8MTc4NzY3MjY0M3ww&ixlib=rb-4.1.0&q=85",
+      "alt": "Medical consultation context"
+    },
+    "document_vault": {
+      "url": "https://images.pexels.com/photos/48148/document-agreement-documents-sign-48148.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "dark": "https://images.pexels.com/photos/48148/document-agreement-documents-sign-48148.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Signing a document"
     }
   },
   "instructions_to_main_agent": [
-    "Implement the 'iOS-Native Clean' personality with extreme focus on WCAG AA+ accessibility, prioritizing high contrast and large text.",
-    "Use 'Plus Jakarta Sans' for exceptional legibility and a friendly, empathetic tone.",
-    "Do NOT use a 2x2 grid for the main 4 features if it compromises text size or tap targets. A vertical list of 4 full-width cards is preferred for accessibility, with generous md/lg padding.",
-    "Implement the requested 'Soft blue' palette strictly using the provided HEX codes to avoid the banned generic 'indigo/purple' AI feel. Ensure #111827 text on #FFFFFF surfaces.",
-    "For the bottom banner 'Hai appena ricevuto una diagnosi?', use the `bottom_banner_wave` image with a STRICT top-to-bottom dark gradient scrim to guarantee the overlay text and CTA button remain perfectly readable.",
-    "Feature icons (balance, map, stethoscope, people) must be Phosphor icons tinted in brandPrimary, placed inside a brandSecondary tinted rounded square.",
-    "Ensure touch targets (cards, buttons) are at least 56pt high with clear tap states (scale or opacity feedback)."
+    "IMPLEMENTATION OF DUOTONE/MONOCHROME BLUE IMAGES: Since we fetch normal photos, you MUST apply a blue duotone overlay in React Native. Use an `expo-linear-gradient` scrim positioned absolutely over the `expo-image` using the brand color (#2A75D3) with ~50-60% opacity, or use a `tintColor` approach if the image is transparent. Text on top must be #FFFFFF.",
+    "ACCESSIBILITY TYPOGRAPHY: Set the base font size to 16pt (larger than standard) using Plus Jakarta Sans. Do not use weights heavier than 500. Use size and high contrast (#0F172A on #FFFFFF) to create hierarchy.",
+    "TOUCH TARGETS: Every tappable element (buttons, links, checklist items) MUST have a minimum height of 48pt. Elderly users need larger hit areas.",
+    "TOPIC COLORS USAGE: Use the explicit topic colors (Invalidita = #8B5CF6, Lavoro = #F97316, etc.) ONLY as accent markers—like a 4px left-border on a card, a tinted icon container, or a small badge. Do NOT use them as full card backgrounds to prevent a rainbow effect that causes cognitive overload.",
+    "TIMELINE COMPONENT: The 5-step 'Il Percorso' timeline should feel tactile. Use a solid #2A75D3 vertical line with filled circles for completed steps, and outlined circles for pending steps.",
+    "RADII AND SHADOWS: Strictly adhere to 12px-16px border radii on all cards and images. Use a subtle shadow (tier 1) for elevation. Avoid flat grey borders; instead, use soft `surfaceSecondary` (#F8FAFC) or subtle sage green (#F0FDF4) backgrounds for separation.",
+    "Avoid glassmorphism. This app serves a demographic that needs extreme clarity. Transparent, blurred overlays reduce legibility."
   ]
 }

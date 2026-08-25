@@ -1,30 +1,29 @@
-// Immagini illustrative (Unsplash CDN) — stile caldo, umano, empatico.
-// Angoli arrotondati applicati dai componenti (radius 12-16).
+// Illustrazioni TutelApp generate su misura (stile italiano, palette brand).
+// File locali in assets/images/illustrations/ — niente foto stock estere.
 
-const U = (id: string, w = 900) =>
-  `https://images.unsplash.com/${id}?w=${w}&q=65&auto=format&fit=crop&sat=-100`;
+import { ImageSourcePropType } from "react-native";
 
-export const IMAGES = {
-  /** Home hero — mani che si sostengono, cura familiare */
-  homeHero: U("photo-1544027993-37dbfe43562a", 1080),
-  /** Wizard passo 1 — diagnosi (stetoscopio) */
-  wizardDiagnosi: U("photo-1584982751601-97dcc096659c"),
-  /** Wizard passo 2 — lavoro (team) */
-  wizardLavoro: U("photo-1521737604893-d14cc237f11d"),
-  /** Wizard passo 3 — certificato (firma documento) */
-  wizardCertificato: U("photo-1450101499163-c8848c66ca85"),
-  /** Risultati — diritti e permessi 104 (consulenza/documenti) */
-  diritti104: U("photo-1556761175-b413da4baf72"),
-  /** Patronati e assistenza (sportello/ufficio) */
-  patronati: U("photo-1577962917302-cd874c4e31d2"),
-  /** Aiuti sul territorio (mani che si aiutano) */
-  territorio: U("photo-1521791136064-7986c2920216"),
-  /** Trasporti e pubblica assistenza */
-  trasporti: U("photo-1587745416684-47953f16f02f"),
+export const IMAGES: Record<string, ImageSourcePropType> = {
+  /** Home hero — caregiver con signora anziana, casa italiana */
+  homeHero: require("../../assets/images/illustrations/home_hero.jpg"),
+  /** Wizard passo 1 — medico di famiglia consegna il referto */
+  wizardDiagnosi: require("../../assets/images/illustrations/wizard_diagnosi.jpg"),
+  /** Wizard passo 2 — lavoro e famiglia */
+  wizardLavoro: require("../../assets/images/illustrations/wizard_lavoro.jpg"),
+  /** Wizard passo 3 — certificato e tessera sanitaria */
+  wizardCertificato: require("../../assets/images/illustrations/wizard_certificato.jpg"),
+  /** Risultati — diritti e permessi 104 */
+  diritti104: require("../../assets/images/illustrations/diritti104.jpg"),
+  /** Patronati e assistenza — sportello italiano */
+  patronati: require("../../assets/images/illustrations/patronati.jpg"),
+  /** Aiuti sul territorio — piazza italiana */
+  territorio: require("../../assets/images/illustrations/territorio.jpg"),
+  /** Trasporti — ambulanza Pubblica Assistenza */
+  trasporti: require("../../assets/images/illustrations/trasporti.jpg"),
   /** Assistenza domiciliare ADI/SAD */
-  domiciliare: U("photo-1544027993-37dbfe43562a"),
+  domiciliare: require("../../assets/images/illustrations/domiciliare.jpg"),
   /** Fisioterapia */
-  fisioterapia: U("photo-1571019613454-1cb2f99b2d8b"),
+  fisioterapia: require("../../assets/images/illustrations/fisioterapia.jpg"),
   /** RSA e ricoveri di sollievo */
-  rsa: U("photo-1559757148-5c350d0d3c56"),
+  rsa: require("../../assets/images/illustrations/rsa.jpg"),
 };

@@ -49,7 +49,7 @@ export default function PatronatiPage() {
       >
         {/* Hero banner */}
         <ImageBackground
-          source={{ uri: IMAGES.patronati }}
+          source={IMAGES.patronati}
           style={styles.hero}
           imageStyle={styles.heroImage}
         >

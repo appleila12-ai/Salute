@@ -119,7 +119,7 @@ export default function Territorio() {
       >
         {/* Hero banner */}
         <ImageBackground
-          source={{ uri: IMAGES.territorio }}
+          source={IMAGES.territorio}
           style={styles.hero}
           imageStyle={styles.heroImage}
         >
@@ -161,7 +161,7 @@ export default function Territorio() {
             style={[styles.card, { borderLeftColor: c.color }]}
             testID={`territorio-card-${c.id}`}
           >
-            <MonoImage uri={c.image} height={120} radius={0} />
+            <MonoImage source={c.image} height={120} radius={0} />
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
                 <View style={[styles.cardIcon, { backgroundColor: c.soft }]}>

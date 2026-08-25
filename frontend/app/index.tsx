@@ -186,7 +186,7 @@ export default function Home() {
 
         {/* Hero image — calda ed empatica */}
         <ImageBackground
-          source={{ uri: IMAGES.homeHero }}
+          source={IMAGES.homeHero}
           style={styles.heroImage}
           imageStyle={styles.heroImageInner}
           testID="home-hero-image"

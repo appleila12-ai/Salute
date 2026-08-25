@@ -167,7 +167,7 @@ export default function Risultati() {
 
           {/* Banner: Diritti e Permessi 104 */}
           <ImageBackground
-            source={{ uri: IMAGES.diritti104 }}
+            source={IMAGES.diritti104}
             style={styles.sectionBanner}
             imageStyle={styles.sectionBannerImage}
             testID="rights-banner"
@@ -195,7 +195,7 @@ export default function Risultati() {
             testID="results-patronati-link"
           >
             <MonoImage
-              uri={IMAGES.patronati}
+              source={IMAGES.patronati}
               height={96}
               radius={0}
             />
@@ -229,7 +229,7 @@ export default function Risultati() {
             testID="results-territorio-link"
           >
             <MonoImage
-              uri={IMAGES.territorio}
+              source={IMAGES.territorio}
               height={96}
               radius={0}
             />

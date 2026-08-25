@@ -1,6 +1,7 @@
 // Dati e logica condivisa per gli Aiuti Pratici sul Territorio.
 
 import { Ionicons } from "@expo/vector-icons";
+import { ImageSourcePropType } from "react-native";
 
 import { topics } from "@/src/theme";
 import { IMAGES } from "@/src/lib/images";
@@ -50,7 +51,7 @@ export interface HelpCard {
   label: string;
   title: string;
   body: string;
-  image: string;
+  image: ImageSourcePropType;
   rows: { label: string; text: string }[];
 }
 

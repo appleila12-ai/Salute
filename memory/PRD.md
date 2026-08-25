@@ -117,3 +117,12 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Entry card "Contatti Utili" in home sotto "Inizia il percorso" (testID home-contatti-link)
 - TUTTE le 20 REGIONI italiane: REGIONAL_PORTALS completato in territorio.ts (fonte unica, export REGIONI); modal regione in home ora scrollabile (maxHeight 420)
 - Verificato con screenshot: selezione Sardegna→Liguria ok, pagina contatti completa
+
+## Iterazione 11 (Giugno 2026) — Illustrazioni italiane su misura
+- Generato con Gemini Nano Banana (EMERGENT_LLM_KEY) un set di 11 ILLUSTRAZIONI flat su misura, ambientazione ITALIANA, palette brand (ceruleo/navy/teal/ambra), niente testo: home_hero, 3 wizard, diritti104, patronati, territorio, trasporti, domiciliare, fisioterapia, rsa
+- Script riusabile: /app/scripts/gen_illustrations.py (accetta nomi come argomenti per rigenerare singole immagini)
+- Asset locali compressi (~40-80KB jpg) in frontend/assets/images/illustrations/ — RIMOSSE tutte le foto stock Unsplash "americane"
+- images.ts ora usa require() locali (ImageSourcePropType); MonoImage prende `source` con velo blu leggerissimo (0.06)
+- Aggiornati: home hero, 3 step wizard, banner diritti 104, entry-card patronati/territorio, hero pagine patronati e territorio, card territorio
+- Suggerimenti estetici del design agent salvati in /app/design_guidelines.json (font Plus Jakarta Sans 16pt, touch 48pt, topic colors solo come accenti) — NON ancora applicati, in attesa di conferma utente
+- Verificato con screenshot: home, wizard, risultati, territorio

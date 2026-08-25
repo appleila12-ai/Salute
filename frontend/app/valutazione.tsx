@@ -130,7 +130,7 @@ export default function Wizard() {
           {step === 1 && (
             <View testID="step-1">
               <MonoImage
-                uri={IMAGES.wizardDiagnosi}
+                source={IMAGES.wizardDiagnosi}
                 height={120}
                 style={styles.stepImage}
               />
@@ -193,7 +193,7 @@ export default function Wizard() {
           {step === 2 && (
             <View testID="step-2">
               <MonoImage
-                uri={IMAGES.wizardLavoro}
+                source={IMAGES.wizardLavoro}
                 height={120}
                 style={styles.stepImage}
               />
@@ -231,7 +231,7 @@ export default function Wizard() {
           {step === 3 && (
             <View testID="step-3">
               <MonoImage
-                uri={IMAGES.wizardCertificato}
+                source={IMAGES.wizardCertificato}
                 height={120}
                 style={styles.stepImage}
               />
