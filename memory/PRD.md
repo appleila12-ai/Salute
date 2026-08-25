@@ -81,3 +81,10 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Nuovo logo mano-cuore (MCI hand-heart), palette topics per argomento, card regione grande in home
 - PracticalHelpSection nei risultati: 4 schede espandibili (Trasporti, ADI/SAD, Fisioterapia, RSA/sollievo) + PDF "Guida ai Servizi Sociali del Comune"
 - Test: backend 27/27 pytest, frontend E2E validato (iteration_5.json)
+
+## Iterazione 6 (Giugno 2026) — tutti i suggerimenti implementati
+- Storico valutazioni in home (LE TUE VALUTAZIONI, max 3, riapribili) — home ora scrollabile
+- Promemoria regionali negli Aiuti Pratici: banner regione + link portale ufficiale (10 regioni) + contatti trasporti dinamici per regione
+- Guida Servizi Sociali salvata anche in Cassaforte se sbloccata (nome Guida_Servizi_Sociali_{regione}.pdf)
+- Refactor: risultati/[id].tsx 1067→~400 righe; estratti AssistantCard, ShareModal, AppealSection, RightsSectionCard; nuova lib condivisa src/lib/vault.ts (usata da VaultSection, payment-success, PracticalHelpSection)
+- Test: frontend E2E completo validato senza bug (iteration_6.json)

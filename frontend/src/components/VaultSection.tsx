@@ -22,17 +22,16 @@ import { colors, radius, spacing, topics } from "@/src/theme";
 import { storage } from "@/src/utils/storage";
 import { createCheckout, getPaymentStatus } from "@/src/lib/payments";
 import { buildReportHtml, Report } from "@/src/lib/reports";
-
-export const VAULT_UNLOCK_KEY = "salutenav:vaultUnlocked";
-export const VAULT_PENDING_KEY = "salutenav:pendingPayment";
-const VAULT_FILES_KEY = "salutenav:vaultFiles";
-
-interface VaultFile {
-  id: string;
-  name: string;
-  uri?: string;
-  date: string;
-}
+import {
+  addVaultFile,
+  isVaultUnlocked,
+  loadVaultFiles,
+  removeVaultFileEntry,
+  subscribeVault,
+  unlockVault,
+  VAULT_PENDING_KEY,
+  VaultFile,
+} from "@/src/lib/vault";
 
 function toast(msg: string) {
   if (Platform.OS === "android") ToastAndroid.show(msg, ToastAndroid.SHORT);
@@ -48,28 +47,13 @@ export function VaultSection({ report }: { report: Report }) {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadState = useCallback(async () => {
-    const u = await storage.getItem<string>(VAULT_UNLOCK_KEY, "");
-    if (u === "1") setUnlocked(true);
-    const raw = await storage.getItem<string>(VAULT_FILES_KEY, "");
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setFiles(parsed);
-      } catch {
-        /* ignore */
-      }
-    }
+    if (await isVaultUnlocked()) setUnlocked(true);
+    setFiles(await loadVaultFiles());
   }, []);
-
-  const persistFiles = async (list: VaultFile[]) => {
-    setFiles(list);
-    await storage.setItem(VAULT_FILES_KEY, JSON.stringify(list.slice(0, 50)));
-  };
 
   const markPaid = useCallback(async () => {
     setUnlocked(true);
-    await storage.setItem(VAULT_UNLOCK_KEY, "1");
-    await storage.removeItem(VAULT_PENDING_KEY);
+    await unlockVault();
     toast("Cassaforte sbloccata!");
   }, []);
 
@@ -100,8 +84,10 @@ export function VaultSection({ report }: { report: Report }) {
     [markPaid],
   );
 
-  // On mount: load persisted state and resume a pending payment if any
+  // On mount: load persisted state, subscribe to vault changes,
+  // resume a pending payment if any
   useEffect(() => {
+    const unsubscribe = subscribeVault(setFiles);
     (async () => {
       await loadState();
       const pending = await storage.getItem<string>(VAULT_PENDING_KEY, "");
@@ -118,7 +104,10 @@ export function VaultSection({ report }: { report: Report }) {
         }, 2000);
       }
     })();
-    return stopPolling;
+    return () => {
+      unsubscribe();
+      stopPolling();
+    };
   }, [loadState, pollStatus]);
 
   const startCheckout = async () => {
@@ -156,16 +145,6 @@ export function VaultSection({ report }: { report: Report }) {
     }
   };
 
-  const addFile = async (name: string, uri?: string) => {
-    const entry: VaultFile = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      name,
-      uri,
-      date: new Date().toISOString(),
-    };
-    await persistFiles([entry, ...files]);
-  };
-
   const saveReportPdf = async () => {
     const html = buildReportHtml(report);
     const name = `Report_TutelApp_${new Date()
@@ -174,13 +153,13 @@ export function VaultSection({ report }: { report: Report }) {
     try {
       if (Platform.OS === "web") {
         await Print.printAsync({ html });
-        await addFile(name);
+        await addVaultFile(name);
         return;
       }
       const { uri } = await Print.printToFileAsync({ html });
       const dest = `${FileSystem.documentDirectory}${Date.now()}_report.pdf`;
       await FileSystem.copyAsync({ from: uri, to: dest });
-      await addFile(name, dest);
+      await addVaultFile(name, dest);
       toast("PDF salvato in cassaforte");
     } catch (e) {
       console.warn("save pdf failed", e);
@@ -203,7 +182,7 @@ export function VaultSection({ report }: { report: Report }) {
         await FileSystem.copyAsync({ from: asset.uri, to: dest });
         uri = dest;
       }
-      await addFile(asset.name || "Documento", uri);
+      await addVaultFile(asset.name || "Documento", uri);
       toast("Documento aggiunto");
     } catch (e) {
       console.warn("pick failed", e);
@@ -232,7 +211,7 @@ export function VaultSection({ report }: { report: Report }) {
     if (f.uri && Platform.OS !== "web") {
       FileSystem.deleteAsync(f.uri, { idempotent: true }).catch(() => {});
     }
-    await persistFiles(files.filter((x) => x.id !== f.id));
+    await removeVaultFileEntry(f.id);
   };
 
   return (

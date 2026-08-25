@@ -1,22 +1,24 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { brand, colors, radius, spacing } from "@/src/theme";
 import { storage } from "@/src/utils/storage";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useCloudSync } from "@/src/contexts/CloudSyncContext";
 import { Logo, Wordmark } from "@/src/components/Brand";
+import { formatDate, listReports, Report } from "@/src/lib/reports";
 
 const COFFEE_URL = "https://www.buymeacoffee.com/salutenav";
 const REGIONE_KEY = "salutenav:regione";
@@ -50,6 +52,7 @@ export default function Home() {
   const [regione, setRegione] = useState("Liguria");
   const [regionOpen, setRegionOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [history, setHistory] = useState<Report[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -57,6 +60,20 @@ export default function Home() {
       if (r) setRegione(r);
     })();
   }, []);
+
+  // Storico valutazioni: si aggiorna ogni volta che si torna in home
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        const list = await listReports();
+        if (active) setHistory(list.slice(0, 3));
+      })();
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   const openCoffee = () => {
     Linking.openURL(COFFEE_URL).catch(() => {});
@@ -106,7 +123,11 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Top bar: brand wordmark + region + login/user */}
         <View style={styles.topBar} testID="home-topbar">
           <Wordmark size="sm" showLogo={true} logoVariant="soft" />
@@ -259,6 +280,46 @@ export default function Home() {
 
         <View style={styles.spacer} />
 
+        {/* Storico valutazioni */}
+        {history.length > 0 && (
+          <View style={styles.historyBox} testID="home-history">
+            <Text style={styles.historyLabel}>LE TUE VALUTAZIONI</Text>
+            {history.map((r) => (
+              <Pressable
+                key={r.id}
+                onPress={() => router.push(`/risultati/${r.id}`)}
+                style={({ pressed }) => [
+                  styles.historyRow,
+                  pressed && { opacity: 0.8 },
+                ]}
+                accessibilityRole="button"
+                testID={`home-history-item-${r.id}`}
+              >
+                <View style={styles.historyIcon}>
+                  <Ionicons
+                    name="document-text"
+                    size={16}
+                    color={colors.brandPrimary}
+                  />
+                </View>
+                <View style={styles.flex}>
+                  <Text style={styles.historyTitle} numberOfLines={1}>
+                    {r.answers.who} · {r.answers.work}
+                  </Text>
+                  <Text style={styles.historyDate}>
+                    {formatDate(r.createdAt)}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={colors.borderStrong}
+                />
+              </Pressable>
+            ))}
+          </View>
+        )}
+
         {/* Coffee box */}
         <View
           style={[
@@ -289,7 +350,7 @@ export default function Home() {
             </Pressable>
           </View>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Region modal */}
       <Modal
@@ -419,7 +480,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   flex: { flex: 1 },
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     alignItems: "stretch",
@@ -684,7 +745,47 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  spacer: { flex: 1 },
+  spacer: { flex: 1, minHeight: spacing.lg },
+
+  historyBox: {
+    marginBottom: spacing.md,
+  },
+  historyLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.onSurfaceTertiary,
+    letterSpacing: 1.1,
+    marginBottom: spacing.sm,
+  },
+  historyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.xs,
+    minHeight: 48,
+  },
+  historyIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.brandSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  historyTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.onSurface,
+  },
+  historyDate: {
+    fontSize: 11,
+    color: colors.onSurfaceTertiary,
+    marginTop: 1,
+  },
 
   supportBox: {
     backgroundColor: colors.surfaceSecondary,

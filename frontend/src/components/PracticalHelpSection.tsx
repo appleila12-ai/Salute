@@ -1,8 +1,9 @@
 // Aiuti Pratici sul Territorio — Assistenza, Trasporti e Fisioterapia.
 // Sezione espandibile con 4 schede guidate + guida PDF scaricabile.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -13,8 +14,34 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system/legacy";
 
 import { colors, radius, spacing, topics } from "@/src/theme";
+import { storage } from "@/src/utils/storage";
+import { addVaultFile, isVaultUnlocked } from "@/src/lib/vault";
+
+const REGIONE_KEY = "salutenav:regione";
+
+/** Portali sanitari/sociali ufficiali per regione */
+const REGIONAL_PORTALS: Record<string, { label: string; url: string }> = {
+  Liguria: { label: "Regione Liguria — Salute e Sociale", url: "https://www.regione.liguria.it" },
+  Lombardia: { label: "Regione Lombardia — Welfare", url: "https://www.regione.lombardia.it" },
+  Lazio: { label: "Salute Lazio", url: "https://www.salutelazio.it" },
+  Campania: { label: "Regione Campania — Sanità", url: "https://www.regione.campania.it" },
+  Veneto: { label: "Regione Veneto — Sanità", url: "https://www.regione.veneto.it" },
+  Piemonte: { label: "Regione Piemonte — Sanità", url: "https://www.regione.piemonte.it" },
+  "Emilia-Romagna": { label: "Salute Emilia-Romagna", url: "https://salute.regione.emilia-romagna.it" },
+  Toscana: { label: "Regione Toscana — Salute", url: "https://www.regione.toscana.it" },
+  Sicilia: { label: "Regione Siciliana — Salute", url: "https://www.regione.sicilia.it" },
+  Puglia: { label: "Sanità Puglia", url: "https://www.sanita.puglia.it" },
+};
+
+function transportContacts(regione: string): string {
+  if (regione === "Liguria") {
+    return "Pubblica Assistenza Sarzana — Via Falcinello 2, tel. 0187 620200. In altre zone della Liguria cerca la Pubblica Assistenza (ANPAS) o la Croce Rossa del tuo Comune.";
+  }
+  return `In ${regione} cerca la Pubblica Assistenza (rete ANPAS — anpas.org) o la Croce Rossa del tuo Comune: chiedi del servizio di trasporto sanitario/sociale.`;
+}
 
 interface HelpCard {
   id: string;
@@ -42,10 +69,6 @@ const CARDS: HelpCard[] = [
       {
         label: "Requisiti",
         text: "Impossibilità di deambulazione o patologie complesse. La richiesta passa dal Medico di Medicina Generale o dalla convenzione ASL.",
-      },
-      {
-        label: "Contatti locali",
-        text: "Pubblica Assistenza Sarzana — Via Falcinello 2, tel. 0187 620200. In altre zone cerca la Pubblica Assistenza o la Croce Rossa del tuo Comune.",
       },
     ],
   },
@@ -120,8 +143,17 @@ function toast(msg: string) {
   else console.log(msg);
 }
 
-function buildGuideHtml(): string {
-  const cardsHtml = CARDS.map(
+function buildGuideHtml(regione: string): string {
+  const cards = CARDS.map((c) =>
+    c.id === "trasporto"
+      ? {
+          ...c,
+          rows: [...c.rows, { label: "Contatti locali", text: transportContacts(regione) }],
+        }
+      : c,
+  );
+  const portal = REGIONAL_PORTALS[regione];
+  const cardsHtml = cards.map(
     (c) => `
     <div class="card" style="border-left: 4px solid ${c.color};">
       <div class="label" style="color:${c.color};">${c.label}</div>
@@ -161,7 +193,7 @@ function buildGuideHtml(): string {
 <body>
   <div class="brand">TutelApp</div>
   <h1>Guida ai Servizi Sociali del Comune</h1>
-  <div class="sub">Aiuti pratici sul territorio: assistenza, trasporti, riabilitazione e ricoveri di sollievo. Porta questa guida ai Servizi Sociali o al Patronato.</div>
+  <div class="sub">Aiuti pratici sul territorio: assistenza, trasporti, riabilitazione e ricoveri di sollievo. Regione di riferimento: <b>${regione}</b>${portal ? ` — portale ufficiale: ${portal.url}` : ""}. Porta questa guida ai Servizi Sociali o al Patronato.</div>
   ${cardsHtml}
   <div class="steps">
     <div class="title">Come muoversi con i Servizi Sociali del Comune</div>
@@ -182,17 +214,49 @@ export function PracticalHelpSection() {
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [regione, setRegione] = useState("Liguria");
+
+  useEffect(() => {
+    (async () => {
+      const r = await storage.getItem<string>(REGIONE_KEY, "");
+      if (r) setRegione(r);
+    })();
+  }, []);
+
+  const portal = REGIONAL_PORTALS[regione];
+  const cards = CARDS.map((c) =>
+    c.id === "trasporto"
+      ? {
+          ...c,
+          rows: [
+            ...c.rows,
+            { label: "Contatti locali", text: transportContacts(regione) },
+          ],
+        }
+      : c,
+  );
 
   const downloadGuide = async () => {
     if (downloading) return;
     setDownloading(true);
-    const html = buildGuideHtml();
+    const html = buildGuideHtml(regione);
+    const guideName = `Guida_Servizi_Sociali_${regione}.pdf`;
     try {
       if (Platform.OS === "web") {
         await Print.printAsync({ html });
+        if (await isVaultUnlocked()) {
+          await addVaultFile(guideName);
+          toast("Guida salvata anche in cassaforte");
+        }
         return;
       }
       const { uri } = await Print.printToFileAsync({ html });
+      if (await isVaultUnlocked()) {
+        const dest = `${FileSystem.documentDirectory}${Date.now()}_guida.pdf`;
+        await FileSystem.copyAsync({ from: uri, to: dest });
+        await addVaultFile(guideName, dest);
+        toast("Guida salvata anche in cassaforte");
+      }
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
         await Sharing.shareAsync(uri, {
@@ -242,7 +306,31 @@ export function PracticalHelpSection() {
 
       {open && (
         <View testID="practical-help-body">
-          {CARDS.map((c) => {
+          {/* Banner regionale */}
+          <View style={styles.regionBanner} testID="practical-help-region">
+            <Ionicons name="location" size={16} color={colors.brandPrimaryDark} />
+            <View style={styles.flex}>
+              <Text style={styles.regionBannerTitle}>
+                Servizi per la tua regione: {regione}
+              </Text>
+              {portal && (
+                <Pressable
+                  onPress={() => Linking.openURL(portal.url).catch(() => {})}
+                  hitSlop={6}
+                  testID="practical-help-portal-link"
+                >
+                  <Text style={styles.regionBannerLink}>
+                    {portal.label} ↗
+                  </Text>
+                </Pressable>
+              )}
+              <Text style={styles.regionBannerHint}>
+                Puoi cambiare regione dalla Home.
+              </Text>
+            </View>
+          </View>
+
+          {cards.map((c) => {
             const isOpen = expandedId === c.id;
             return (
               <View
@@ -445,5 +533,32 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "800",
     letterSpacing: -0.1,
+  },
+
+  regionBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    backgroundColor: colors.brandSecondary,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  regionBannerTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.brandPrimaryDark,
+  },
+  regionBannerLink: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.brandPrimary,
+    marginTop: 3,
+    textDecorationLine: "underline",
+  },
+  regionBannerHint: {
+    fontSize: 11,
+    color: colors.onSurfaceTertiary,
+    marginTop: 3,
   },
 });

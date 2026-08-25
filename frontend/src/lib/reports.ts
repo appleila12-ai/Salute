@@ -234,6 +234,11 @@ export async function getReport(id: string): Promise<Report | null> {
   return list.find((r) => r.id === id) ?? null;
 }
 
+/** Storico delle valutazioni salvate sul dispositivo (più recente prima). */
+export async function listReports(): Promise<Report[]> {
+  return readLocal();
+}
+
 export function getShareUrl(report: Report): string | null {
   if (!report.shareToken || !BACKEND_URL) return null;
   return `${BACKEND_URL}/api/reports/share/${report.shareToken}`;

@@ -16,10 +16,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { colors, radius, spacing } from "@/src/theme";
 import { storage } from "@/src/utils/storage";
 import { getPaymentStatus } from "@/src/lib/payments";
-import {
-  VAULT_PENDING_KEY,
-  VAULT_UNLOCK_KEY,
-} from "@/src/components/VaultSection";
+import { unlockVault, VAULT_PENDING_KEY } from "@/src/lib/vault";
 
 type State = "checking" | "paid" | "failed" | "timeout";
 
@@ -42,8 +39,7 @@ export default function PaymentSuccess() {
         if (cancelled) return;
         if (s.paymentStatus === "paid") {
           clearInterval(timer);
-          await storage.setItem(VAULT_UNLOCK_KEY, "1");
-          await storage.removeItem(VAULT_PENDING_KEY);
+          await unlockVault();
           setState("paid");
           return;
         }
