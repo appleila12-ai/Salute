@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Keyboard,
   Linking,
   Modal,
   Platform,
@@ -100,6 +101,8 @@ export function PatronatiSection() {
           placeholderTextColor={colors.muted}
           value={query}
           onChangeText={setQuery}
+          returnKeyType="search"
+          onSubmitEditing={() => Keyboard.dismiss()}
           testID="patronati-search-input"
           accessibilityLabel="Cerca Patronato per CAP o città"
         />
@@ -118,6 +121,38 @@ export function PatronatiSection() {
           </Pressable>
         )}
       </View>
+
+      {/* Tasto Continua sotto il campo CAP */}
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        disabled={query.trim().length === 0}
+        style={({ pressed }) => [
+          styles.searchBtn,
+          query.trim().length === 0 && styles.searchBtnDisabled,
+          pressed && { opacity: 0.85 },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Continua e mostra le sedi trovate"
+        testID="patronati-search-btn"
+      >
+        <Ionicons
+          name="arrow-forward-circle"
+          size={18}
+          color={
+            query.trim().length === 0
+              ? colors.onSurfaceTertiary
+              : colors.onBrandPrimary
+          }
+        />
+        <Text
+          style={[
+            styles.searchBtnText,
+            query.trim().length === 0 && { color: colors.onSurfaceTertiary },
+          ]}
+        >
+          Continua
+        </Text>
+      </Pressable>
 
       <Text style={styles.listLabel}>
         {query.trim().length === 0
@@ -461,7 +496,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     minHeight: 52,
     borderRadius: radius.lg,
+    marginBottom: spacing.sm,
+  },
+  searchBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.brandPrimary,
+    minHeight: 48,
+    borderRadius: radius.pill,
     marginBottom: spacing.lg,
+  },
+  searchBtnDisabled: {
+    backgroundColor: colors.surfaceTertiary,
+  },
+  searchBtnText: {
+    color: colors.onBrandPrimary,
+    fontSize: 14,
+    fontWeight: "800",
   },
   searchInput: {
     flex: 1,

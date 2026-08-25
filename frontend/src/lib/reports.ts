@@ -351,6 +351,22 @@ export function buildReportHtml(r: Report): string {
   <div class="section-title">I tuoi diritti passo dopo passo</div>
   ${sectionsHtml}
 
+  <div class="section-title">Dove inviare la pratica</div>
+  <div class="card">
+    <div>Il <b>Patronato</b> (ACLI, INCA CGIL, ITAL UIL, INAS CISL) presenta la domanda all'INPS <b>gratuitamente</b> al posto tuo.</div>
+    <div style="margin-top:6px;">Porta con te: <b>Codice Fiscale</b>, <b>documento d'identità</b> e la <b>ricevuta con il numero di protocollo</b> del certificato medico introduttivo.</div>
+  </div>
+
+  <div class="section-title">Aiuti pratici sul territorio</div>
+  <div class="card">
+    <ul>
+      <li><b>Trasporto per esami e visite:</b> trasporto protetto con la Pubblica Assistenza (richiesta tramite Medico di Medicina Generale o convenzione ASL).</li>
+      <li><b>Assistenza a domicilio:</b> ADI della ASL (cure sanitarie, gratuita, la attiva il Medico Curante) e SAD del Comune (igiene e cura personale, via Servizi Sociali).</li>
+      <li><b>Fisioterapia e riabilitazione:</b> cicli a domicilio o in centri convenzionati con prescrizione del fisiatra; verifica l'esenzione ticket.</li>
+      <li><b>RSA e ricoveri di sollievo:</b> ricoveri temporanei tramite valutazione dell'Unità Valutativa Multidimensionale (UVM) della ASL.</li>
+    </ul>
+  </div>
+
   <div class="disclaimer">
     Il contenuto di questo report è orientativo e generato in base alle risposte fornite. Per la conferma nel tuo caso specifico rivolgiti a un patronato, a un CAF o al tuo ufficio HR/Personale.
   </div>

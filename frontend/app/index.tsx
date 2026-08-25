@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  ImageBackground,
   Linking,
   Modal,
   Pressable,
@@ -20,6 +21,7 @@ import { useCloudSync } from "@/src/contexts/CloudSyncContext";
 import { Logo, Wordmark } from "@/src/components/Brand";
 import { GuideStepsCard } from "@/src/components/NextStepsSection";
 import { formatDate, listReports, Report } from "@/src/lib/reports";
+import { IMAGES } from "@/src/lib/images";
 
 const COFFEE_URL = "https://www.buymeacoffee.com/salutenav";
 const REGIONE_KEY = "salutenav:regione";
@@ -195,9 +197,22 @@ export default function Home() {
           </View>
         ) : null}
 
+        {/* Hero image — calda ed empatica */}
+        <ImageBackground
+          source={{ uri: IMAGES.homeHero }}
+          style={styles.heroImage}
+          imageStyle={styles.heroImageInner}
+          testID="home-hero-image"
+        >
+          <View style={styles.heroImageOverlay} />
+          <Text style={styles.heroImageText}>
+            Nessuno dovrebbe orientarsi da solo.
+          </Text>
+        </ImageBackground>
+
         {/* Hero */}
         <View style={styles.hero}>
-          <Logo size={84} variant="solid" style={{ marginBottom: spacing.lg }} />
+          <Logo size={72} variant="solid" style={{ marginBottom: spacing.md }} />
           <Text style={styles.title} testID="home-title">
             {brand.name}
           </Text>
@@ -590,7 +605,29 @@ const styles = StyleSheet.create({
 
   hero: {
     alignItems: "center",
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
+  },
+  heroImage: {
+    height: 150,
+    borderRadius: 16,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    padding: spacing.md,
+    marginTop: spacing.xs,
+  },
+  heroImageInner: { borderRadius: 16 },
+  heroImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(11,42,72,0.32)",
+  },
+  heroImageText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   regionCard: {
     flexDirection: "row",

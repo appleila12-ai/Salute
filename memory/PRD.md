@@ -95,3 +95,12 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Rimosso l'indicatore 4-step dalla home; ordine home: branding → regione → Inizia il percorso → Percorso 5 passi → storico → box sostegno
 - Risultati invariati per il resto (Patronati, cert explainer, 104/invalidità, vault, AI)
 - Verificato con screenshot E2E: wizard 3 step senza modal, banner inline presente, percorso in home, risultati integri
+
+## Iterazione 8 (Giugno 2026) — Pagine dedicate + immagini
+- NUOVA pagina /territorio: "Aiuti sul Territorio" in grande, hero image, banner regione + portale, 4 schede con immagini di testata, download guida (salva anche in cassaforte)
+- NUOVA pagina /patronati: "Dove inviare la pratica" con hero image e ricerca CAP + NUOVO tasto "Continua" sotto il campo CAP (fix "finestra non funziona")
+- Risultati: Patronati e Territorio sostituiti da entry-card con immagini che portano alle nuove pagine; banner immagine "Diritti e Permessi — Legge 104" sopra le sezioni; Riepilogo (Scarica PDF/Condividi) SPOSTATO IN FONDO in card dedicata
+- PDF arricchito: sezioni "Dove inviare la pratica" e "Aiuti pratici sul territorio"
+- IMMAGINI: hero empatica in home ("Nessuno dovrebbe orientarsi da solo"), immagini nei 3 step del wizard (diagnosi/lavoro/certificato), banner nelle macro-categorie; tutte con angoli arrotondati 12-16, palette invariata — src/lib/images.ts (Unsplash CDN)
+- Refactor: PracticalHelpSection eliminato → logica in src/lib/territorio.ts
+- Verificato con screenshot E2E su home, wizard, risultati, patronati e territorio

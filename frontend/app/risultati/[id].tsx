@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,8 +20,7 @@ import * as Sharing from "expo-sharing";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { colors, radius, spacing } from "@/src/theme";
-import { PatronatiSection } from "@/src/components/PatronatiSection";
-import { PracticalHelpSection } from "@/src/components/PracticalHelpSection";
+import { IMAGES } from "@/src/lib/images";
 import { NextStepsSection } from "@/src/components/NextStepsSection";
 import { DeadlineCard } from "@/src/components/DeadlineCard";
 import { VaultSection } from "@/src/components/VaultSection";
@@ -164,52 +165,92 @@ export default function Risultati() {
           {/* Percorso passo-passo + certificato + possibilità 104/invalidità */}
           <NextStepsSection work={a.work} cert={a.cert} who={a.who} />
 
+          {/* Banner: Diritti e Permessi 104 */}
+          <ImageBackground
+            source={{ uri: IMAGES.diritti104 }}
+            style={styles.sectionBanner}
+            imageStyle={styles.sectionBannerImage}
+            testID="rights-banner"
+          >
+            <View style={styles.sectionBannerOverlay} />
+            <Text style={styles.sectionBannerLabel}>I TUOI DIRITTI</Text>
+            <Text style={styles.sectionBannerTitle}>
+              Diritti e Permessi — Legge 104
+            </Text>
+          </ImageBackground>
+
           {/* Rights sections */}
           {report.sections.map((s) => (
             <RightsSectionCard key={s.id} section={s} />
           ))}
 
-          {/* PDF + Share row */}
-          <View style={styles.actionsRow}>
-            <Pressable
-              onPress={handleDownloadPdf}
-              style={({ pressed }) => [
-                styles.primaryBtn,
-                pressed && { opacity: 0.85 },
-              ]}
-              accessibilityRole="button"
-              testID="results-pdf-btn"
-            >
+          {/* Dove inviare la pratica → pagina Patronati */}
+          <Pressable
+            onPress={() => router.push("/patronati")}
+            style={({ pressed }) => [
+              styles.linkBanner,
+              pressed && { opacity: 0.92 },
+            ]}
+            accessibilityRole="button"
+            testID="results-patronati-link"
+          >
+            <Image
+              source={{ uri: IMAGES.patronati }}
+              style={styles.linkBannerImage}
+              resizeMode="cover"
+            />
+            <View style={styles.linkBannerBody}>
+              <View style={styles.flex}>
+                <Text style={styles.linkBannerLabel}>PATRONATI E ASSISTENZA</Text>
+                <Text style={styles.linkBannerTitle}>
+                  Dove inviare la pratica
+                </Text>
+                <Text style={styles.linkBannerSub}>
+                  Trova il Patronato più vicino con la ricerca per CAP: invia la
+                  domanda gratis al posto tuo.
+                </Text>
+              </View>
               <Ionicons
-                name="download-outline"
-                size={18}
-                color={colors.onBrandPrimary}
-              />
-              <Text style={styles.primaryBtnText}>Scarica PDF</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setShareOpen(true)}
-              style={({ pressed }) => [
-                styles.secondaryBtn,
-                pressed && { opacity: 0.85 },
-              ]}
-              accessibilityRole="button"
-              testID="results-share-btn"
-            >
-              <Ionicons
-                name="people-outline"
-                size={18}
+                name="chevron-forward"
+                size={20}
                 color={colors.brandPrimary}
               />
-              <Text style={styles.secondaryBtnText}>Condividi Famiglia</Text>
-            </Pressable>
-          </View>
+            </View>
+          </Pressable>
 
-          {/* Patronati e Sportelli Territoriali */}
-          <PatronatiSection />
-
-          {/* Aiuti Pratici sul Territorio */}
-          <PracticalHelpSection />
+          {/* Aiuti sul territorio → pagina dedicata */}
+          <Pressable
+            onPress={() => router.push("/territorio")}
+            style={({ pressed }) => [
+              styles.linkBanner,
+              pressed && { opacity: 0.92 },
+            ]}
+            accessibilityRole="button"
+            testID="results-territorio-link"
+          >
+            <Image
+              source={{ uri: IMAGES.territorio }}
+              style={styles.linkBannerImage}
+              resizeMode="cover"
+            />
+            <View style={styles.linkBannerBody}>
+              <View style={styles.flex}>
+                <Text style={styles.linkBannerLabel}>SUL TERRITORIO</Text>
+                <Text style={styles.linkBannerTitle}>
+                  Aiuti Pratici sul Territorio
+                </Text>
+                <Text style={styles.linkBannerSub}>
+                  Trasporti, assistenza a domicilio, fisioterapia, RSA e ricoveri
+                  di sollievo.
+                </Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.brandPrimary}
+              />
+            </View>
+          </Pressable>
 
           {/* AI Assistant */}
           <AssistantCard answers={a} />
@@ -244,6 +285,60 @@ export default function Risultati() {
 
           {/* Ricorso / riesame */}
           <AppealSection />
+
+          {/* Riepilogo completo — in fondo così il PDF include tutto il percorso */}
+          <View style={styles.summaryCard} testID="results-summary">
+            <View style={styles.summaryHeader}>
+              <View style={styles.summaryIcon}>
+                <Ionicons
+                  name="document-attach"
+                  size={22}
+                  color={colors.brandPrimary}
+                />
+              </View>
+              <View style={styles.flex}>
+                <Text style={styles.summaryTitle}>Il tuo riepilogo completo</Text>
+                <Text style={styles.summarySub}>
+                  Scarica il PDF con diritti, percorso, patronati e aiuti sul
+                  territorio, o condividilo con la famiglia.
+                </Text>
+              </View>
+            </View>
+            <View style={styles.actionsRow}>
+              <Pressable
+                onPress={handleDownloadPdf}
+                style={({ pressed }) => [
+                  styles.primaryBtn,
+                  pressed && { opacity: 0.85 },
+                ]}
+                accessibilityRole="button"
+                testID="results-pdf-btn"
+              >
+                <Ionicons
+                  name="download-outline"
+                  size={18}
+                  color={colors.onBrandPrimary}
+                />
+                <Text style={styles.primaryBtnText}>Scarica PDF</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setShareOpen(true)}
+                style={({ pressed }) => [
+                  styles.secondaryBtn,
+                  pressed && { opacity: 0.85 },
+                ]}
+                accessibilityRole="button"
+                testID="results-share-btn"
+              >
+                <Ionicons
+                  name="people-outline"
+                  size={18}
+                  color={colors.brandPrimary}
+                />
+                <Text style={styles.secondaryBtnText}>Condividi Famiglia</Text>
+              </Pressable>
+            </View>
+          </View>
 
           <Text style={styles.disclaimer}>
             Questo report è orientativo, generato in base alle risposte fornite.
@@ -336,8 +431,104 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: "row",
     gap: spacing.sm,
-    marginTop: spacing.lg,
-    marginBottom: spacing.lg,
+  },
+
+  sectionBanner: {
+    height: 110,
+    borderRadius: 16,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  sectionBannerImage: { borderRadius: 16 },
+  sectionBannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(11,42,72,0.45)",
+  },
+  sectionBannerLabel: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+  },
+  sectionBannerTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+    marginTop: 2,
+  },
+
+  linkBanner: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: "hidden",
+    marginBottom: spacing.md,
+  },
+  linkBannerImage: {
+    width: "100%",
+    height: 96,
+    backgroundColor: colors.surfaceSecondary,
+  },
+  linkBannerBody: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
+  linkBannerLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: colors.brandPrimary,
+    letterSpacing: 1.1,
+  },
+  linkBannerTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.onSurface,
+    marginTop: 2,
+    letterSpacing: -0.2,
+  },
+  linkBannerSub: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.onSurfaceSecondary,
+    marginTop: 3,
+  },
+
+  summaryCard: {
+    backgroundColor: colors.brandSecondary,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  summaryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  summaryIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  summaryTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: colors.onBrandSecondary,
+  },
+  summarySub: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.onSurfaceTertiary,
+    marginTop: 2,
   },
   primaryBtn: {
     flex: 1,

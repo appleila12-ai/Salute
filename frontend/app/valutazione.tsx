@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { colors, radius, spacing, topics } from "@/src/theme";
+import { IMAGES } from "@/src/lib/images";
 import {
   Answers,
   CertOption,
@@ -127,6 +129,11 @@ export default function Wizard() {
         >
           {step === 1 && (
             <View testID="step-1">
+              <Image
+                source={{ uri: IMAGES.wizardDiagnosi }}
+                style={styles.stepImage}
+                resizeMode="cover"
+              />
               <View style={styles.stepIconWrap}>
                 <View style={[styles.stepIcon, { backgroundColor: topics.legge104.soft }]}>
                   <Ionicons
@@ -185,6 +192,11 @@ export default function Wizard() {
 
           {step === 2 && (
             <View testID="step-2">
+              <Image
+                source={{ uri: IMAGES.wizardLavoro }}
+                style={styles.stepImage}
+                resizeMode="cover"
+              />
               <View style={styles.stepIconWrap}>
                 <View style={[styles.stepIcon, { backgroundColor: topics.lavoro.soft }]}>
                   <Ionicons
@@ -218,6 +230,11 @@ export default function Wizard() {
 
           {step === 3 && (
             <View testID="step-3">
+              <Image
+                source={{ uri: IMAGES.wizardCertificato }}
+                style={styles.stepImage}
+                resizeMode="cover"
+              />
               <View style={styles.stepIconWrap}>
                 <View style={[styles.stepIcon, { backgroundColor: topics.documenti.soft }]}>
                   <Ionicons
@@ -413,6 +430,13 @@ const styles = StyleSheet.create({
   },
   optionsList: {
     gap: spacing.md,
+  },
+  stepImage: {
+    width: "100%",
+    height: 120,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceSecondary,
+    marginBottom: spacing.md,
   },
   partnerNote: {
     flexDirection: "row",
