@@ -111,3 +111,9 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - IMMAGINI MONOCOLORE: Unsplash con &sat=-100 (grigio lato CDN) + velo blu brand — nuovo componente MonoImage usato in wizard (3 step), card territorio, entry-card risultati; gli hero ImageBackground diventano mono con l'overlay esistente
 - NESSUN DEPLOY effettuato (richiesta esplicita utente)
 - Verificato con screenshot: home, wizard, percorso
+
+## Iterazione 10 (Giugno 2026) — Contatti Utili + 20 regioni
+- NUOVA pagina /contatti "Contatti Utili": INPS (803 164 fisso, 06 164 164 mobile, inps.it, app INPS Mobile), Patronati (ACLI, INCA, INAS, ITAL con siti), Altri (Agenzia Entrate 800 909 696, Min. Salute 1500) — righe tappabili tel:/https
+- Entry card "Contatti Utili" in home sotto "Inizia il percorso" (testID home-contatti-link)
+- TUTTE le 20 REGIONI italiane: REGIONAL_PORTALS completato in territorio.ts (fonte unica, export REGIONI); modal regione in home ora scrollabile (maxHeight 420)
+- Verificato con screenshot: selezione Sardegna→Liguria ok, pagina contatti completa

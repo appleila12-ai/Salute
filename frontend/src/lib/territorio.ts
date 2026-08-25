@@ -7,19 +7,32 @@ import { IMAGES } from "@/src/lib/images";
 
 export const REGIONE_KEY = "salutenav:regione";
 
-/** Portali sanitari/sociali ufficiali per regione */
+/** Portali ufficiali per tutte le 20 regioni italiane */
 export const REGIONAL_PORTALS: Record<string, { label: string; url: string }> = {
+  Abruzzo: { label: "Regione Abruzzo — Salute", url: "https://www.regione.abruzzo.it" },
+  Basilicata: { label: "Regione Basilicata — Sanità", url: "https://www.regione.basilicata.it" },
+  Calabria: { label: "Regione Calabria — Salute", url: "https://www.regione.calabria.it" },
+  Campania: { label: "Regione Campania — Sanità", url: "https://www.regione.campania.it" },
+  "Emilia-Romagna": { label: "Salute Emilia-Romagna", url: "https://salute.regione.emilia-romagna.it" },
+  "Friuli-Venezia Giulia": { label: "Regione FVG — Salute", url: "https://www.regione.fvg.it" },
+  Lazio: { label: "Salute Lazio", url: "https://www.salutelazio.it" },
   Liguria: { label: "Regione Liguria — Salute e Sociale", url: "https://www.regione.liguria.it" },
   Lombardia: { label: "Regione Lombardia — Welfare", url: "https://www.regione.lombardia.it" },
-  Lazio: { label: "Salute Lazio", url: "https://www.salutelazio.it" },
-  Campania: { label: "Regione Campania — Sanità", url: "https://www.regione.campania.it" },
-  Veneto: { label: "Regione Veneto — Sanità", url: "https://www.regione.veneto.it" },
+  Marche: { label: "Regione Marche — Salute", url: "https://www.regione.marche.it" },
+  Molise: { label: "Regione Molise — Salute", url: "https://www.regione.molise.it" },
   Piemonte: { label: "Regione Piemonte — Sanità", url: "https://www.regione.piemonte.it" },
-  "Emilia-Romagna": { label: "Salute Emilia-Romagna", url: "https://salute.regione.emilia-romagna.it" },
-  Toscana: { label: "Regione Toscana — Salute", url: "https://www.regione.toscana.it" },
-  Sicilia: { label: "Regione Siciliana — Salute", url: "https://www.regione.sicilia.it" },
   Puglia: { label: "Sanità Puglia", url: "https://www.sanita.puglia.it" },
+  Sardegna: { label: "Regione Sardegna — Sanità", url: "https://www.regione.sardegna.it" },
+  Sicilia: { label: "Regione Siciliana — Salute", url: "https://www.regione.sicilia.it" },
+  Toscana: { label: "Regione Toscana — Salute", url: "https://www.regione.toscana.it" },
+  "Trentino-Alto Adige": { label: "Regione Trentino-Alto Adige", url: "https://www.regione.taa.it" },
+  Umbria: { label: "Regione Umbria — Salute", url: "https://www.regione.umbria.it" },
+  "Valle d'Aosta": { label: "Regione Valle d'Aosta — Sanità", url: "https://www.regione.vda.it" },
+  Veneto: { label: "Regione Veneto — Sanità", url: "https://www.regione.veneto.it" },
 };
+
+/** Tutte le 20 regioni italiane, in ordine alfabetico */
+export const REGIONI = Object.keys(REGIONAL_PORTALS);
 
 export function transportContacts(regione: string): string {
   if (regione === "Liguria") {

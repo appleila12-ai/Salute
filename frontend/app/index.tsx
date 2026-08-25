@@ -22,22 +22,9 @@ import { Wordmark, BrandLockup } from "@/src/components/Brand";
 import { GuideStepsCard } from "@/src/components/NextStepsSection";
 import { formatDate, listReports, Report } from "@/src/lib/reports";
 import { IMAGES } from "@/src/lib/images";
+import { REGIONE_KEY, REGIONI } from "@/src/lib/territorio";
 
 const COFFEE_URL = "https://www.buymeacoffee.com/salutenav";
-const REGIONE_KEY = "salutenav:regione";
-
-const REGIONI = [
-  "Liguria",
-  "Lombardia",
-  "Lazio",
-  "Campania",
-  "Veneto",
-  "Piemonte",
-  "Emilia-Romagna",
-  "Toscana",
-  "Sicilia",
-  "Puglia",
-];
 
 export default function Home() {
   const router = useRouter();
@@ -268,6 +255,33 @@ export default function Home() {
           <Ionicons name="arrow-forward" size={22} color={colors.onBrandPrimary} />
         </Pressable>
 
+        {/* Contatti Utili — sempre a portata di mano */}
+        <Pressable
+          onPress={() => router.push("/contatti")}
+          style={({ pressed }) => [
+            styles.contactsCard,
+            pressed && { opacity: 0.9 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Contatti utili INPS e patronati"
+          testID="home-contatti-link"
+        >
+          <View style={styles.contactsIcon}>
+            <Ionicons name="call" size={20} color={colors.brandPrimary} />
+          </View>
+          <View style={styles.flex}>
+            <Text style={styles.contactsTitle}>Contatti Utili</Text>
+            <Text style={styles.contactsSub}>
+              Numeri e link ufficiali INPS e patronati
+            </Text>
+          </View>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={colors.borderStrong}
+          />
+        </Pressable>
+
         <View style={styles.spacer} />
 
         {/* Storico valutazioni */}
@@ -359,32 +373,37 @@ export default function Home() {
           >
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Scegli la regione</Text>
-            {REGIONI.map((r) => {
-              const isSel = r === regione;
-              return (
-                <Pressable
-                  key={r}
-                  onPress={() => pickRegion(r)}
-                  style={({ pressed }) => [
-                    styles.sheetItem,
-                    pressed && { opacity: 0.7 },
-                  ]}
-                  testID={`region-option-${r}`}
-                >
-                  <Text
-                    style={[
-                      styles.sheetItemText,
-                      isSel && styles.sheetItemTextSelected,
+            <ScrollView
+              style={styles.sheetScroll}
+              showsVerticalScrollIndicator={false}
+            >
+              {REGIONI.map((r) => {
+                const isSel = r === regione;
+                return (
+                  <Pressable
+                    key={r}
+                    onPress={() => pickRegion(r)}
+                    style={({ pressed }) => [
+                      styles.sheetItem,
+                      pressed && { opacity: 0.7 },
                     ]}
+                    testID={`region-option-${r}`}
                   >
-                    {r}
-                  </Text>
-                  {isSel && (
-                    <Ionicons name="checkmark" size={20} color={colors.brandPrimary} />
-                  )}
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.sheetItemText,
+                        isSel && styles.sheetItemTextSelected,
+                      ]}
+                    >
+                      {r}
+                    </Text>
+                    {isSel && (
+                      <Ionicons name="checkmark" size={20} color={colors.brandPrimary} />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -718,6 +737,37 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
 
+  contactsCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    minHeight: 60,
+  },
+  contactsIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.brandSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contactsTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.onSurface,
+  },
+  contactsSub: {
+    fontSize: 12,
+    color: colors.onSurfaceTertiary,
+    marginTop: 1,
+  },
+
   spacer: { flex: 1, minHeight: spacing.lg },
 
   historyBox: {
@@ -820,6 +870,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: colors.onSurface,
     marginBottom: spacing.sm,
+  },
+  sheetScroll: {
+    maxHeight: 420,
   },
   sheetItem: {
     flexDirection: "row",
