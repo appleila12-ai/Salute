@@ -35,10 +35,10 @@ const REGIONI = [
 ];
 
 const STEPS = [
-  { num: 1, label: "Diagnosi" },
-  { num: 2, label: "Lavoro" },
-  { num: 3, label: "Documenti" },
-  { num: 4, label: "Patronato" },
+  { num: 1, label: "Diagnosi", color: "#2A75D3", soft: "#E6F0FB" },
+  { num: 2, label: "Lavoro", color: "#EA580C", soft: "#FFEDD5" },
+  { num: 3, label: "Documenti", color: "#B45309", soft: "#FEF3C7" },
+  { num: 4, label: "Patronato", color: "#DB2777", soft: "#FCE7F3" },
 ];
 
 export default function Home() {
@@ -189,10 +189,6 @@ export default function Home() {
           <Text style={styles.subtitle}>
             {brand.tagline}
           </Text>
-          <View style={styles.regionChip}>
-            <Ionicons name="location" size={11} color={colors.brandPrimary} />
-            <Text style={styles.regionChipText}>Attivo in {regione}</Text>
-          </View>
         </View>
 
         <View style={styles.descBox}>
@@ -201,6 +197,32 @@ export default function Home() {
             ed esenzioni ti spettano dopo una diagnosi.
           </Text>
         </View>
+
+        {/* Region — ben visibile e modificabile */}
+        <Pressable
+          onPress={() => setRegionOpen(true)}
+          style={({ pressed }) => [
+            styles.regionCard,
+            pressed && { opacity: 0.9 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={`La tua regione: ${regione}. Tocca per cambiare`}
+          testID="home-region-card"
+        >
+          <View style={styles.regionCardIcon}>
+            <Ionicons name="location" size={22} color={colors.brandPrimary} />
+          </View>
+          <View style={styles.flex}>
+            <Text style={styles.regionCardLabel}>LA TUA REGIONE</Text>
+            <Text style={styles.regionCardValue} testID="home-region-value">
+              {regione}
+            </Text>
+          </View>
+          <View style={styles.regionCardCta}>
+            <Text style={styles.regionCardCtaText}>Cambia</Text>
+            <Ionicons name="chevron-down" size={14} color={colors.brandPrimary} />
+          </View>
+        </Pressable>
 
         <Pressable
           onPress={() => router.push("/valutazione")}
@@ -216,20 +238,15 @@ export default function Home() {
           <Ionicons name="arrow-forward" size={22} color={colors.onBrandPrimary} />
         </Pressable>
 
-        {/* 4-step indicator */}
+        {/* 4-step indicator — un colore per argomento */}
         <View style={styles.stepsRow} testID="home-steps">
           {STEPS.map((s, i) => (
             <View key={s.num} style={styles.stepGroup}>
               <View style={styles.stepIndicator}>
                 <View
-                  style={[styles.stepBadge, i === 0 && styles.stepBadgeActive]}
+                  style={[styles.stepBadge, { backgroundColor: s.soft }]}
                 >
-                  <Text
-                    style={[
-                      styles.stepBadgeText,
-                      i === 0 && styles.stepBadgeTextActive,
-                    ]}
-                  >
+                  <Text style={[styles.stepBadgeText, { color: s.color }]}>
                     {s.num}
                   </Text>
                 </View>
@@ -534,21 +551,51 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: spacing.lg,
   },
-  regionChip: {
-    marginTop: spacing.md,
+  regionCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: spacing.md,
     backgroundColor: colors.brandSecondary,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderWidth: 1.5,
+    borderColor: "rgba(42,117,211,0.22)",
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  regionCardIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  regionCardLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.brandPrimary,
+    letterSpacing: 1.1,
+  },
+  regionCardValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.onBrandSecondary,
+    marginTop: 1,
+    letterSpacing: -0.3,
+  },
+  regionCardCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 7,
     borderRadius: radius.pill,
   },
-  regionChipText: {
-    fontSize: 11,
-    fontWeight: "700",
+  regionCardCtaText: {
+    fontSize: 12,
+    fontWeight: "800",
     color: colors.brandPrimary,
-    letterSpacing: 0.2,
   },
   title: {
     fontSize: 30,
@@ -620,16 +667,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  stepBadgeActive: {
-    backgroundColor: colors.brandSecondary,
-  },
   stepBadgeText: {
     fontSize: 12,
     fontWeight: "800",
     color: colors.borderStrong,
-  },
-  stepBadgeTextActive: {
-    color: colors.brandPrimary,
   },
   stepLabel: {
     fontSize: 10,

@@ -244,10 +244,75 @@ class TestAssistantRegression:
         body = r.json()
         assert isinstance(body.get("answer"), str)
         assert len(body["answer"]) > 10
+        # Prompt is Italian TutelApp -> answer should be Italian (heuristic: contains at least one Italian stop word)
+        low = body["answer"].lower()
+        assert any(w in low for w in [" e ", " la ", " il ", " di ", " che ", "104", "invalidit"])
 
     def test_assistant_empty_question_400(self, api_client):
         r = api_client.post(f"{API}/assistant", json={"question": "   "})
         assert r.status_code == 400
+
+
+# ---------- Payments (Stripe) ----------
+class TestPayments:
+    ORIGIN_URL = "https://salute-naviga.preview.emergentagent.com"
+
+    @pytest.fixture(scope="class")
+    def created_session(self, api_client, mongo_db):
+        r = api_client.post(
+            f"{API}/payments/checkout",
+            json={"originUrl": self.ORIGIN_URL, "deviceId": "TEST_dev_pay"},
+            timeout=60,
+        )
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert "url" in body and "sessionId" in body
+        yield body
+        # Cleanup
+        mongo_db.payment_transactions.delete_many({"session_id": body["sessionId"]})
+
+    def test_checkout_returns_stripe_url_and_sessionid(self, created_session):
+        body = created_session
+        assert body["url"].startswith("https://checkout.stripe.com"), body["url"]
+        assert isinstance(body["sessionId"], str) and len(body["sessionId"]) > 5
+
+    def test_checkout_creates_pending_transaction_in_mongo(
+        self, created_session, mongo_db
+    ):
+        body = created_session
+        doc = mongo_db.payment_transactions.find_one(
+            {"session_id": body["sessionId"]}
+        )
+        assert doc is not None, "payment_transactions doc not created"
+        assert doc["payment_status"] == "pending"
+        assert doc["amount"] == 4.99
+        assert doc["currency"] == "eur"
+        assert doc["product"] == "vault"
+        assert doc["deviceId"] == "TEST_dev_pay"
+
+    def test_status_returns_pending_for_unpaid_session(self, api_client, created_session):
+        body = created_session
+        r = api_client.get(f"{API}/payments/status/{body['sessionId']}", timeout=30)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        # A freshly-created session hasn't been paid yet
+        assert "status" in data and "paymentStatus" in data
+        # Session should still be open/pending, paymentStatus 'unpaid' (or 'no_payment_required'/pending)
+        assert data["paymentStatus"] in ("unpaid", "pending", "no_payment_required"), data
+        assert data["status"] in ("open", "pending", "complete"), data
+
+    def test_status_unknown_session_returns_404(self, api_client):
+        r = api_client.get(
+            f"{API}/payments/status/cs_test_DOES_NOT_EXIST_xyz123", timeout=30
+        )
+        assert r.status_code == 404, r.text
+
+    def test_checkout_invalid_origin_returns_400(self, api_client):
+        r = api_client.post(
+            f"{API}/payments/checkout", json={"originUrl": "abc"}
+        )
+        assert r.status_code == 400, r.text
+        assert "originUrl" in r.json().get("detail", "").lower() or "non valido" in r.json().get("detail", "")
 
 
 # ---------- E2E with injected mock session ----------

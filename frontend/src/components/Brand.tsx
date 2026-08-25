@@ -1,10 +1,10 @@
-// TutelApp brand components: Logo (shield + check) and Wordmark
-// Composed with react-native Views + Ionicons (no SVG dep).
+// TutelApp brand components: Logo (hand supporting a heart — care & protection)
+// and Wordmark. Composed with react-native Views + vector icons (no SVG dep).
 
 import React from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { colors } from "@/src/theme";
 
@@ -15,14 +15,13 @@ interface LogoProps {
 }
 
 /**
- * Logo mark: rounded soft shield with a checkmark inside.
+ * Logo mark: a hand supporting a heart (cura e tutela).
  * `solid` = filled gradient (used on Home hero / white backgrounds).
  * `soft`  = light tinted background (used inline next to wordmark).
  */
 export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
-  // Shield uses a slight radius asymmetry (rounded top, tapered bottom feel via padding)
   const borderRadius = size * 0.32;
-  const iconSize = Math.round(size * 0.58);
+  const iconSize = Math.round(size * 0.62);
 
   if (variant === "soft") {
     return (
@@ -41,8 +40,8 @@ export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
           style,
         ]}
       >
-        <Ionicons
-          name="shield-checkmark"
+        <MaterialCommunityIcons
+          name="hand-heart"
           size={iconSize}
           color={colors.brandPrimary}
         />
@@ -73,14 +72,26 @@ export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
+      {/* warm accent glow behind the heart */}
+      <View
+        style={{
+          position: "absolute",
+          top: size * 0.12,
+          alignSelf: "center",
+          width: size * 0.42,
+          height: size * 0.42,
+          borderRadius: size * 0.21,
+          backgroundColor: "rgba(245,158,11,0.28)",
+        }}
+      />
       {/* subtle inner highlight */}
       <View
         style={{
           position: "absolute",
-          top: size * 0.1,
-          left: size * 0.15,
-          right: size * 0.35,
-          height: size * 0.15,
+          top: size * 0.08,
+          left: size * 0.14,
+          right: size * 0.4,
+          height: size * 0.12,
           borderRadius: size * 0.1,
           backgroundColor: "rgba(255,255,255,0.14)",
         }}
@@ -92,12 +103,10 @@ export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
           justifyContent: "center",
         }}
       >
-        <Ionicons name="shield" size={iconSize + 4} color="rgba(255,255,255,0.18)" />
-        <Ionicons
-          name="checkmark-sharp"
+        <MaterialCommunityIcons
+          name="hand-heart"
           size={iconSize}
           color="#FFFFFF"
-          style={{ position: "absolute" }}
         />
       </View>
     </View>

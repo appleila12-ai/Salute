@@ -14,17 +14,17 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { colors, radius, spacing } from "@/src/theme";
+import { colors, radius, spacing, topics } from "@/src/theme";
 import {
   Answers,
   CertOption,
-  deriveDiagnosisDate,
   Report,
   saveReport,
   WhenOption,
   WhoOption,
   WorkOption,
 } from "@/src/lib/reports";
+import { PARTNER_NOTE } from "@/src/lib/content";
 
 const WHO_OPTIONS: WhoOption[] = ["Io stesso", "Un genitore", "Un figlio", "Coniuge/Partner"];
 const WHEN_OPTIONS: WhenOption[] = [
@@ -82,7 +82,6 @@ export default function Wizard() {
     const answers: Answers = {
       who,
       when,
-      diagnosisDate: deriveDiagnosisDate(when),
       work,
       cert,
     };
@@ -132,14 +131,14 @@ export default function Wizard() {
           {step === 1 && (
             <View testID="step-1">
               <View style={styles.stepIconWrap}>
-                <View style={styles.stepIcon}>
+                <View style={[styles.stepIcon, { backgroundColor: topics.legge104.soft }]}>
                   <Ionicons
                     name="heart-outline"
                     size={26}
-                    color={colors.brandPrimary}
+                    color={topics.legge104.main}
                   />
                 </View>
-                <Text style={styles.stepBadge}>LA DIAGNOSI</Text>
+                <Text style={[styles.stepBadge, { color: topics.legge104.main }]}>LA DIAGNOSI</Text>
               </View>
               <Text style={styles.question}>Chi ha ricevuto la diagnosi?</Text>
               <Text style={styles.helper}>
@@ -156,6 +155,16 @@ export default function Wizard() {
                   />
                 ))}
               </View>
+              {who === "Coniuge/Partner" && (
+                <View style={styles.partnerNote} testID="wizard-partner-note">
+                  <Ionicons
+                    name="information-circle"
+                    size={16}
+                    color={colors.brandPrimaryDark}
+                  />
+                  <Text style={styles.partnerNoteText}>{PARTNER_NOTE}</Text>
+                </View>
+              )}
 
               <Text style={[styles.question, { marginTop: spacing.xl }]}>
                 Quando è avvenuta la diagnosi?
@@ -180,14 +189,14 @@ export default function Wizard() {
           {step === 2 && (
             <View testID="step-2">
               <View style={styles.stepIconWrap}>
-                <View style={styles.stepIcon}>
+                <View style={[styles.stepIcon, { backgroundColor: topics.lavoro.soft }]}>
                   <Ionicons
                     name="briefcase-outline"
                     size={26}
-                    color={colors.brandPrimary}
+                    color={topics.lavoro.main}
                   />
                 </View>
-                <Text style={styles.stepBadge}>LAVORO</Text>
+                <Text style={[styles.stepBadge, { color: topics.lavoro.main }]}>LAVORO</Text>
               </View>
               <Text style={styles.question}>
                 Qual è la situazione lavorativa di chi assiste o del paziente?
@@ -213,14 +222,14 @@ export default function Wizard() {
           {step === 3 && (
             <View testID="step-3">
               <View style={styles.stepIconWrap}>
-                <View style={styles.stepIcon}>
+                <View style={[styles.stepIcon, { backgroundColor: topics.documenti.soft }]}>
                   <Ionicons
                     name="document-text-outline"
                     size={26}
-                    color={colors.brandPrimary}
+                    color={topics.documenti.main}
                   />
                 </View>
-                <Text style={styles.stepBadge}>DOCUMENTI</Text>
+                <Text style={[styles.stepBadge, { color: topics.documenti.main }]}>DOCUMENTI</Text>
               </View>
               <Text style={styles.question}>
                 {"Avete già il certificato medico introduttivo dell'INPS?"}
@@ -436,6 +445,22 @@ const styles = StyleSheet.create({
   },
   optionsList: {
     gap: spacing.md,
+  },
+  partnerNote: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    backgroundColor: colors.brandSecondary,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  partnerNoteText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.brandPrimaryDark,
+    fontWeight: "500",
   },
   optionCard: {
     flexDirection: "row",

@@ -13,6 +13,10 @@ import uuid
 from datetime import datetime, timezone, timedelta
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from emergentintegrations.payments.stripe.checkout import (
+    CheckoutSessionRequest,
+    StripeCheckout,
+)
 
 
 ROOT_DIR = Path(__file__).parent
@@ -25,6 +29,8 @@ db = client[os.environ['DB_NAME']]
 
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
+VAULT_PRICE_EUR = 4.99  # amount is defined server-side only
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -277,19 +283,103 @@ async def get_shared_report(share_token: str):
     return doc
 
 
+# ---------- Payments (Stripe — Cassaforte Referti) ----------
+class CheckoutIn(BaseModel):
+    originUrl: str
+    deviceId: Optional[str] = None
+
+
+@api_router.post("/payments/checkout")
+async def create_payment_checkout(payload: CheckoutIn):
+    if not STRIPE_API_KEY:
+        raise HTTPException(status_code=500, detail="Stripe non configurato")
+    origin = (payload.originUrl or "").strip().rstrip("/")
+    if not origin.startswith("http"):
+        raise HTTPException(status_code=400, detail="originUrl non valido")
+
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY)
+    request = CheckoutSessionRequest(
+        amount=VAULT_PRICE_EUR,
+        currency="eur",
+        success_url=f"{origin}/payment-success?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{origin}/?payment=cancelled",
+        metadata={"product": "vault", "deviceId": payload.deviceId or ""},
+    )
+    try:
+        session = await stripe_checkout.create_checkout_session(request)
+    except Exception as e:
+        logging.exception("stripe checkout failed")
+        raise HTTPException(status_code=502, detail=f"Errore creazione pagamento: {e}")
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.payment_transactions.insert_one({
+        "session_id": session.session_id,
+        "amount": VAULT_PRICE_EUR,
+        "currency": "eur",
+        "product": "vault",
+        "deviceId": payload.deviceId or "",
+        "payment_status": "pending",
+        "createdAt": now,
+        "updatedAt": now,
+    })
+    return {"url": session.url, "sessionId": session.session_id}
+
+
+@api_router.get("/payments/status/{session_id}")
+async def payment_status(session_id: str):
+    doc = await db.payment_transactions.find_one(
+        {"session_id": session_id}, {"_id": 0}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Sessione di pagamento non trovata")
+    # Idempotent: once paid, always paid — no double processing
+    if doc.get("payment_status") == "paid":
+        return {"status": "complete", "paymentStatus": "paid"}
+
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY)
+    try:
+        status = await stripe_checkout.get_checkout_status(session_id)
+    except Exception as e:
+        logging.exception("stripe status failed")
+        raise HTTPException(status_code=502, detail=f"Errore verifica pagamento: {e}")
+
+    if status.payment_status == "paid":
+        await db.payment_transactions.update_one(
+            {"session_id": session_id, "payment_status": {"$ne": "paid"}},
+            {"$set": {
+                "payment_status": "paid",
+                "paidAt": datetime.now(timezone.utc).isoformat(),
+                "updatedAt": datetime.now(timezone.utc).isoformat(),
+            }},
+        )
+    elif status.status == "expired":
+        await db.payment_transactions.update_one(
+            {"session_id": session_id, "payment_status": "pending"},
+            {"$set": {
+                "payment_status": "expired",
+                "updatedAt": datetime.now(timezone.utc).isoformat(),
+            }},
+        )
+    return {"status": status.status, "paymentStatus": status.payment_status}
+
+
 # ---------- AI Assistant ----------
 SYSTEM_PROMPT = (
-    "Sei l'assistente esperto di Navigatore Sanitario, un'app italiana che aiuta i cittadini "
+    "Sei l'assistente esperto di TutelApp, un'app italiana che aiuta i cittadini "
     "a orientarsi tra Legge 104/1992 e Invalidità Civile.\n\n"
     "Regole:\n"
     "1. Rispondi SEMPRE in italiano, con tono empatico, chiaro e diretto.\n"
     "2. Fonda ogni risposta sulla normativa vigente (L. 104/1992, L. 68/1999, art. 42 D.Lgs. 151/2001, "
-    "D.L. 105/2022 per lo smart working, procedure INPS 2024-2026).\n"
-    "3. Sii SINTETICO: max 6 frasi, vai al punto. Se serve elenca 2-3 passi pratici.\n"
-    "4. Se la domanda è troppo specifica per rispondere senza dati clinici, indica cosa chiedere al patronato.\n"
-    "5. Non dare mai indicazioni mediche. Solo procedurali e legali.\n"
-    "6. Non inventare cifre. Se non sei certo di un importo, scrivi 'consulta l'INPS'.\n"
-    "7. Chiudi sempre con una frase incoraggiante e con l'invito a rivolgersi a un patronato per la conferma."
+    "D.Lgs. 105/2022, D.Lgs. 62/2024 — riforma disabilità in sperimentazione, procedure INPS 2024-2026).\n"
+    "3. Ricorda: dal D.Lgs. 105/2022 il convivente di fatto (L. 76/2016, convivenza registrata all'anagrafe) "
+    "è equiparato al coniuge e all'unito civilmente per i permessi art. 33 e il congedo straordinario.\n"
+    "4. Sii SINTETICO: max 6 frasi, vai al punto. Se serve elenca 2-3 passi pratici.\n"
+    "5. Se la domanda è troppo specifica per rispondere senza dati clinici, indica cosa chiedere al patronato.\n"
+    "6. Non dare mai indicazioni mediche. Solo procedurali e legali.\n"
+    "7. Non inventare cifre né date. Se non sei certo di un importo, scrivi 'consulta l'INPS'.\n"
+    "8. Se l'utente è inoccupato o pensionato, NON parlare di permessi lavorativi: orienta su prestazioni "
+    "economiche (assegno mensile, pensione di inabilità, indennità di accompagnamento) ed esenzioni.\n"
+    "9. Chiudi sempre con una frase incoraggiante e con l'invito a rivolgersi a un patronato per la conferma."
 )
 
 

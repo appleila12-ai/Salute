@@ -45,6 +45,18 @@ export const colors = {
   muted: "#64748B",
 };
 
+// Colori per argomento — ogni tema ha la sua identità visiva
+export const topics = {
+  percorso: { main: "#2A75D3", soft: "#E6F0FB", dark: "#1F5CAE" }, // blu — guida passo-passo
+  legge104: { main: "#2A75D3", soft: "#E6F0FB", dark: "#1F5CAE" }, // blu — Legge 104
+  invalidita: { main: "#7C3AED", soft: "#F3E8FF", dark: "#5B21B6" }, // viola — Invalidità Civile
+  esenzioni: { main: "#059669", soft: "#D1FAE5", dark: "#047857" }, // verde — esenzioni/fisco
+  lavoro: { main: "#EA580C", soft: "#FFEDD5", dark: "#C2410C" }, // arancio — lavoro/permessi
+  documenti: { main: "#B45309", soft: "#FEF3C7", dark: "#92400E" }, // miele — documenti/scadenze
+  salute: { main: "#0D9488", soft: "#CCFBF1", dark: "#0F766E" }, // teal — sede/salute
+  patronato: { main: "#DB2777", soft: "#FCE7F3", dark: "#BE185D" }, // magenta — patronato
+};
+
 export const spacing = {
   xs: 4,
   sm: 8,

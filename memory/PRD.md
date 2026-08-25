@@ -68,3 +68,16 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Google Auth reale + Cloud Sync attivi (backend 22/22 test passati)
 - Problema "non vedo più niente" post-ricarica: risolto con riavvio servizi nel nuovo ambiente forkato
 - Prossimi step: Stripe reale per Cassaforte Referti (P1), refactor risultati/[id].tsx (P2)
+
+## Iterazione 5-6 (Giugno 2026)
+- Stripe REALE (emergentintegrations proxy) per Cassaforte €4,99: /api/payments/checkout + /api/payments/status, pagina /payment-success, sblocco persistito
+- Cassaforte sbloccata: salva report PDF + carica documenti (expo-document-picker/file-system), persistiti
+- Rimossa data fittizia diagnosi (intro/PDF mostrano solo il bucket temporale)
+- DeadlineCard: promemoria 90gg con data reale inserita dall'utente (GG/MM/AAAA), countdown persistito
+- NextStepsSection: percorso 5 passi, spiegazione Certificato Introduttivo, possibilità Legge 104, tabella percentuali invalidità
+- Inoccupato/Pensionato: rimosse sezioni permessi/sede → sezione "Prestazioni economiche"; suggerimenti AI dedicati
+- Nota partner/convivente di fatto (D.Lgs 105/2022) nel wizard e nei risultati
+- Fix ricerca CAP patronati (prefisso CAP, 1 cifra ok) + 8 nuove sedi nazionali
+- Nuovo logo mano-cuore (MCI hand-heart), palette topics per argomento, card regione grande in home
+- PracticalHelpSection nei risultati: 4 schede espandibili (Trasporti, ADI/SAD, Fisioterapia, RSA/sollievo) + PDF "Guida ai Servizi Sociali del Comune"
+- Test: backend 27/27 pytest, frontend E2E validato (iteration_5.json)

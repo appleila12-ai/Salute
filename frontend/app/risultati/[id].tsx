@@ -22,12 +22,15 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { colors, radius, spacing } from "@/src/theme";
+import { colors, radius, spacing, topics } from "@/src/theme";
 import { PatronatiSection } from "@/src/components/PatronatiSection";
+import { PracticalHelpSection } from "@/src/components/PracticalHelpSection";
+import { NextStepsSection } from "@/src/components/NextStepsSection";
+import { DeadlineCard } from "@/src/components/DeadlineCard";
+import { VaultSection } from "@/src/components/VaultSection";
 import {
   askAssistant,
   buildReportHtml,
-  formatDate,
   getQrUrl,
   getReport,
   getShareUrl,
@@ -35,20 +38,48 @@ import {
   RightSection,
 } from "@/src/lib/reports";
 
-const SUGGESTIONS = [
+const SUGGESTIONS_WORKER = [
   "Mio padre vive in un'altra regione, ho diritto ai permessi?",
   "Posso rifiutare il trasferimento di sede?",
   "Come si richiede il congedo straordinario di 2 anni?",
   "Che percentuale di invalidità serve per l'accompagnamento?",
 ];
 
+const SUGGESTIONS_NO_WORK = [
+  "Quali aiuti economici spettano con l'invalidità civile?",
+  "Come funziona l'indennità di accompagnamento?",
+  "Che percentuale serve per l'esenzione del ticket?",
+  "Sono pensionato: cosa cambia per me?",
+];
+
 const SECTION_META: Record<
   RightSection["id"],
-  { icon: keyof typeof Ionicons.glyphMap; color: string }
+  { icon: keyof typeof Ionicons.glyphMap; color: string; soft: string; label: string }
 > = {
-  permessi: { icon: "time-outline", color: colors.brandPrimary },
-  sede: { icon: "location-outline", color: colors.info },
-  fiscali: { icon: "cash-outline", color: colors.success },
+  permessi: {
+    icon: "time-outline",
+    color: topics.lavoro.main,
+    soft: topics.lavoro.soft,
+    label: "LAVORO",
+  },
+  sede: {
+    icon: "location-outline",
+    color: topics.salute.main,
+    soft: topics.salute.soft,
+    label: "SEDE E SMART WORKING",
+  },
+  fiscali: {
+    icon: "cash-outline",
+    color: topics.esenzioni.main,
+    soft: topics.esenzioni.soft,
+    label: "ESENZIONI",
+  },
+  prestazioni: {
+    icon: "wallet-outline",
+    color: topics.invalidita.main,
+    soft: topics.invalidita.soft,
+    label: "PRESTAZIONI ECONOMICHE",
+  },
 };
 
 const APPEAL_STEPS = [
@@ -76,9 +107,6 @@ export default function Risultati() {
   const [askLoading, setAskLoading] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
-  const [vaultUnlocked, setVaultUnlocked] = useState(false);
-  const [stripeOpen, setStripeOpen] = useState(false);
-  const [vaultFiles, setVaultFiles] = useState<string[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -181,7 +209,8 @@ export default function Risultati() {
   }
 
   const a = report.answers;
-  const diagDate = formatDate(a.diagnosisDate);
+  const suggestions =
+    a.work === "Inoccupato/Pensionato" ? SUGGESTIONS_NO_WORK : SUGGESTIONS_WORKER;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]} testID="results-screen">
@@ -218,47 +247,42 @@ export default function Risultati() {
               <Ionicons name="sparkles" size={20} color={colors.brandPrimary} />
             </View>
             <Text style={styles.introText}>
-              In base alla tua diagnosi del{" "}
-              <Text style={styles.introStrong}>{diagDate}</Text> e alla tua
-              situazione di{" "}
+              In base alla tua diagnosi (
+              <Text style={styles.introStrong}>{a.when.toLowerCase()}</Text>) e
+              alla tua situazione di{" "}
               <Text style={styles.introStrong}>{a.work.toLowerCase()}</Text>,
               ecco a cosa hai diritto passo dopo passo.
             </Text>
           </View>
 
-          {/* 90-day deadline warning */}
-          <View style={styles.deadlineCard} testID="results-deadline">
-            <Ionicons name="alarm" size={22} color={colors.warning} />
-            <View style={styles.flex}>
-              <Text style={styles.deadlineTitle}>Occhio ai 90 giorni</Text>
-              <Text style={styles.deadlineBody}>
-                {"Dal rilascio del certificato medico introduttivo hai "}
-                <Text style={styles.deadlineStrong}>90 giorni</Text>
-                {" per inviare la domanda telematica all'INPS."}
-              </Text>
-            </View>
-          </View>
+          {/* Promemoria scadenza 90 giorni (data reale inserita dall'utente) */}
+          <DeadlineCard cert={a.cert} />
+
+          {/* Percorso passo-passo + certificato + possibilità 104/invalidità */}
+          <NextStepsSection work={a.work} cert={a.cert} who={a.who} />
 
           {/* Rights sections */}
-          {report.sections.map((s, idx) => {
+          {report.sections.map((s) => {
             const meta = SECTION_META[s.id];
             return (
               <View
                 key={s.id}
-                style={styles.sectionCard}
+                style={[styles.sectionCard, { borderLeftColor: meta.color }]}
                 testID={`results-section-${s.id}`}
               >
                 <View style={styles.sectionHeader}>
                   <View
                     style={[
                       styles.sectionIcon,
-                      { backgroundColor: `${meta.color}1A` },
+                      { backgroundColor: meta.soft },
                     ]}
                   >
                     <Ionicons name={meta.icon} size={22} color={meta.color} />
                   </View>
                   <View style={styles.flex}>
-                    <Text style={styles.sectionStep}>PARTE {idx + 1}</Text>
+                    <Text style={[styles.sectionStep, { color: meta.color }]}>
+                      {meta.label}
+                    </Text>
                     <Text style={styles.sectionTitle}>{s.title}</Text>
                   </View>
                 </View>
@@ -324,6 +348,9 @@ export default function Risultati() {
           {/* Patronati e Sportelli Territoriali */}
           <PatronatiSection />
 
+          {/* Aiuti Pratici sul Territorio */}
+          <PracticalHelpSection />
+
           {/* AI Assistant */}
           <View style={styles.aiCard} testID="results-assistant">
             <View style={styles.aiHeader}>
@@ -359,7 +386,7 @@ export default function Risultati() {
 
             <Text style={styles.aiSuggLabel}>Suggerimenti veloci</Text>
             <View style={styles.aiSuggs}>
-              {SUGGESTIONS.map((s, idx) => (
+              {suggestions.map((s, idx) => (
                 <Pressable
                   key={s}
                   onPress={() => {
@@ -422,78 +449,8 @@ export default function Risultati() {
             )}
           </View>
 
-          {/* Cassaforte referti */}
-          <View style={styles.vaultCard} testID="vault-card">
-            <View style={styles.vaultHeader}>
-              <View style={styles.vaultIcon}>
-                <Ionicons name="lock-closed" size={22} color={colors.brandPrimary} />
-              </View>
-              <View style={styles.vaultBadge}>
-                <Text style={styles.vaultBadgeText}>
-                  {vaultUnlocked ? "Attiva" : "€4,99 una tantum"}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.vaultTitle}>
-              Conserva tutti i referti in un unico posto
-            </Text>
-            <Text style={styles.vaultBody}>
-              Carica foto e PDF di analisi, TAC e verbali INPS. Ordinati in
-              automatico per data, pronti da mostrare alla Commissione Medica.
-            </Text>
-            {vaultUnlocked ? (
-              <View style={styles.vaultUnlocked} testID="vault-unlocked">
-                <Pressable
-                  onPress={() =>
-                    setVaultFiles((prev) => [
-                      ...prev,
-                      `Referto_${prev.length + 1}.pdf`,
-                    ])
-                  }
-                  style={({ pressed }) => [
-                    styles.vaultUploadBtn,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                  accessibilityRole="button"
-                  testID="vault-upload-btn"
-                >
-                  <Ionicons name="cloud-upload" size={16} color={colors.onBrandPrimary} />
-                  <Text style={styles.vaultUploadText}>
-                    Carica un referto
-                  </Text>
-                </Pressable>
-                {vaultFiles.map((f, i) => (
-                  <View
-                    key={`${f}-${i}`}
-                    style={styles.vaultFileRow}
-                    testID={`vault-file-${i}`}
-                  >
-                    <Ionicons
-                      name="document-text"
-                      size={14}
-                      color={colors.success}
-                    />
-                    <Text style={styles.vaultFileText} numberOfLines={1}>
-                      {f}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <Pressable
-                onPress={() => setStripeOpen(true)}
-                style={({ pressed }) => [
-                  styles.vaultBtn,
-                  pressed && { opacity: 0.85 },
-                ]}
-                accessibilityRole="button"
-                testID="vault-cta"
-              >
-                <Text style={styles.vaultBtnText}>Sblocca con Stripe · €4,99</Text>
-                <Ionicons name="arrow-forward" size={16} color={colors.brandPrimary} />
-              </Pressable>
-            )}
-          </View>
+          {/* Cassaforte referti — Stripe reale + PDF + upload */}
+          <VaultSection report={report} />
 
           {/* Checklist link */}
           <Pressable
@@ -643,64 +600,6 @@ export default function Risultati() {
           </Pressable>
         </Pressable>
       </Modal>
-      {/* Stripe checkout modal (placeholder) */}
-      <Modal
-        visible={stripeOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setStripeOpen(false)}
-      >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setStripeOpen(false)}
-        >
-          <Pressable
-            style={styles.shareCard}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View style={styles.stripeIconWrap}>
-              <Ionicons name="card" size={32} color={colors.brandPrimary} />
-            </View>
-            <Text style={styles.shareTitle}>Checkout Stripe · €4,99</Text>
-            <Text style={styles.shareSub}>
-              Spazio cloud crittografato per i tuoi referti. Pagamento una
-              tantum, nessun abbonamento.
-            </Text>
-            <View style={styles.shareActions}>
-              <Pressable
-                onPress={() => setStripeOpen(false)}
-                style={({ pressed }) => [
-                  styles.secondaryBtn,
-                  { flex: 1 },
-                  pressed && { opacity: 0.85 },
-                ]}
-                testID="stripe-cancel-btn"
-              >
-                <Text style={styles.secondaryBtnText}>Annulla</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setVaultUnlocked(true);
-                  setStripeOpen(false);
-                  toast("Cassaforte sbloccata");
-                }}
-                style={({ pressed }) => [
-                  styles.primaryBtn,
-                  { flex: 1 },
-                  pressed && { opacity: 0.85 },
-                ]}
-                testID="stripe-pay-btn"
-              >
-                <Text style={styles.primaryBtnText}>Paga ora</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.stripeFooter}>
-              Simulazione dimostrativa · Stripe reale verrà integrato nella
-              prossima release.
-            </Text>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -774,31 +673,12 @@ const styles = StyleSheet.create({
   },
   introStrong: { fontWeight: "800", color: colors.brandPrimary },
 
-  deadlineCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.md,
-    padding: spacing.lg,
-    backgroundColor: "#FEF3C7",
-    borderRadius: radius.lg,
-    marginBottom: spacing.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.warning,
-  },
-  deadlineTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#78350F",
-    marginBottom: 2,
-  },
-  deadlineBody: { fontSize: 13, lineHeight: 19, color: "#78350F" },
-  deadlineStrong: { fontWeight: "800" },
-
   sectionCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    borderLeftWidth: 4,
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
@@ -818,7 +698,6 @@ const styles = StyleSheet.create({
   sectionStep: {
     fontSize: 10,
     fontWeight: "800",
-    color: colors.onSurfaceTertiary,
     letterSpacing: 1.2,
   },
   sectionTitle: {
@@ -1014,119 +893,6 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceSecondary,
   },
 
-  // Vault
-  vaultCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.lg,
-  },
-  vaultHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.md,
-  },
-  vaultIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.brandSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  vaultBadge: {
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  vaultBadgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: colors.warning,
-  },
-  vaultTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: colors.onSurface,
-    marginBottom: 4,
-  },
-  vaultBody: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: colors.onSurfaceSecondary,
-    marginBottom: spacing.md,
-  },
-  vaultBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    alignSelf: "flex-start",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 10,
-    borderRadius: radius.pill,
-    backgroundColor: colors.brandSecondary,
-  },
-  vaultBtnText: {
-    color: colors.brandPrimary,
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  vaultUnlocked: {
-    marginTop: spacing.sm,
-    gap: spacing.sm,
-  },
-  vaultUploadBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.brandPrimary,
-    minHeight: 44,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.lg,
-  },
-  vaultUploadText: {
-    color: colors.onBrandPrimary,
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  vaultFileRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.surfaceSecondary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-  },
-  vaultFileText: {
-    flex: 1,
-    fontSize: 12,
-    color: colors.onSurface,
-    fontWeight: "600",
-  },
-  stripeIconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.pill,
-    backgroundColor: colors.brandSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.md,
-  },
-  stripeFooter: {
-    fontSize: 10,
-    fontStyle: "italic",
-    color: colors.onSurfaceTertiary,
-    marginTop: spacing.sm,
-    textAlign: "center",
-  },
-
   // Checklist link
   checklistLink: {
     flexDirection: "row",
@@ -1201,7 +967,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   appealStepBadgeText: {
-    color: colors.onWarning,
+    color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "800",
   },

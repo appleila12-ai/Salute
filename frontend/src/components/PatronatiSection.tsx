@@ -122,7 +122,9 @@ export function PatronatiSection() {
       <Text style={styles.listLabel}>
         {query.trim().length === 0
           ? "In evidenza — Sarzana (SP)"
-          : `Risultati (${list.length})`}
+          : /^\d+$/.test(query.trim())
+            ? `Sedi più vicine al CAP ${query.trim()}`
+            : `Risultati (${list.length})`}
       </Text>
 
       {list.length === 0 ? (

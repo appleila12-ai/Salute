@@ -131,9 +131,90 @@ export const PATRONATI: Patronato[] = [
     email: "bologna@epaca.it",
     hours: "Lun-Ven 9:00 – 12:30",
   },
+  {
+    id: "inca-firenze",
+    name: "INCA CGIL Firenze",
+    city: "Firenze",
+    province: "FI",
+    address: "Borgo de' Greci 3",
+    cap: "50122",
+    phone: "055 27001",
+    email: "firenze@inca.it",
+    hours: "Lun-Ven 9:00 – 13:00 / 14:30 – 17:00",
+  },
+  {
+    id: "acli-bari",
+    name: "Patronato ACLI Bari",
+    city: "Bari",
+    province: "BA",
+    address: "Via De Bellis 37",
+    cap: "70126",
+    phone: "080 5424564",
+    email: "bari@patronato.acli.it",
+    hours: "Lun-Ven 9:00 – 12:30",
+  },
+  {
+    id: "inas-palermo",
+    name: "INAS CISL Palermo",
+    city: "Palermo",
+    province: "PA",
+    address: "Via Villa Heloise 10",
+    cap: "90143",
+    phone: "091 6113090",
+    email: "palermo@inas.it",
+    hours: "Lun-Ven 8:30 – 13:00",
+  },
+  {
+    id: "ital-venezia",
+    name: "ITAL UIL Venezia-Mestre",
+    city: "Mestre",
+    province: "VE",
+    address: "Via Bembo 2/B",
+    cap: "30172",
+    phone: "041 2905865",
+    email: "venezia@italuil.it",
+    hours: "Lun-Ven 9:00 – 12:30 / 15:00 – 17:00",
+  },
+  {
+    id: "inca-cagliari",
+    name: "INCA CGIL Cagliari",
+    city: "Cagliari",
+    province: "CA",
+    address: "Viale Monastir 35",
+    cap: "09122",
+    phone: "070 2795201",
+    email: "cagliari@inca.it",
+    hours: "Lun-Ven 9:00 – 13:00",
+  },
+  {
+    id: "acli-ancona",
+    name: "Patronato ACLI Ancona",
+    city: "Ancona",
+    province: "AN",
+    address: "Via Di Vittorio 16",
+    cap: "60127",
+    phone: "071 2905000",
+    email: "ancona@patronato.acli.it",
+    hours: "Lun-Mer-Ven 9:00 – 12:30",
+  },
+  {
+    id: "inas-catania",
+    name: "INAS CISL Catania",
+    city: "Catania",
+    province: "CT",
+    address: "Via Crociferi 40",
+    cap: "95124",
+    phone: "095 7159111",
+    email: "catania@inas.it",
+    hours: "Lun-Ven 8:30 – 13:00",
+  },
 ];
 
-/** Filtra e ordina per prossimità di CAP o corrispondenza di città. */
+/**
+ * Filtra e ordina per prossimità di CAP o corrispondenza di città.
+ * Ricerca CAP: confronto per prefisso (i CAP italiani sono zone geografiche:
+ * più cifre iniziali in comune = più vicino), poi per distanza numerica.
+ */
 export function findPatronati(
   list: Patronato[],
   query: string,
@@ -142,19 +223,26 @@ export function findPatronati(
   const q = query.trim().toLowerCase();
   if (!q) return list.filter((p) => p.featured);
 
-  // Se query numerica: ordinamento per distanza CAP
-  if (/^\d{2,5}$/.test(q)) {
-    const target = parseInt(q.padEnd(5, "0"), 10);
-    return [...list]
-      .sort((a, b) => {
-        const da = Math.abs(parseInt(a.cap, 10) - target);
-        const db = Math.abs(parseInt(b.cap, 10) - target);
-        return da - db;
-      })
-      .slice(0, limit);
+  // Query numerica (anche parziale, es. "1", "19", "19125"): modalità CAP
+  if (/^\d+$/.test(q)) {
+    const cap = q.slice(0, 5);
+    const target = parseInt(cap.padEnd(5, "0"), 10);
+    const scored = list.map((p) => {
+      let prefix = 0;
+      while (
+        prefix < cap.length &&
+        prefix < 5 &&
+        p.cap[prefix] === cap[prefix]
+      ) {
+        prefix += 1;
+      }
+      return { p, prefix, dist: Math.abs(parseInt(p.cap, 10) - target) };
+    });
+    scored.sort((a, b) => b.prefix - a.prefix || a.dist - b.dist);
+    return scored.slice(0, limit).map((s) => s.p);
   }
 
-  // Altrimenti match testuale su città o provincia
+  // Altrimenti match testuale su città, provincia o nome
   return list
     .filter(
       (p) =>

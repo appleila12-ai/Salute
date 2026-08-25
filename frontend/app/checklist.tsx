@@ -11,8 +11,9 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { colors, radius, spacing } from "@/src/theme";
+import { colors, radius, spacing, topics } from "@/src/theme";
 import { storage } from "@/src/utils/storage";
+import { CERT_EXPLAINER } from "@/src/lib/content";
 
 const CHECKLIST_KEY = "salutenav:checklist";
 
@@ -28,6 +29,7 @@ export default function Checklist() {
   const insets = useSafeAreaInsets();
   const [checked, setChecked] = useState<boolean[]>(ITEMS.map(() => false));
   const [ready, setReady] = useState(false);
+  const [certInfoOpen, setCertInfoOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -171,6 +173,47 @@ export default function Checklist() {
             i fogli originali!
           </Text>
         </View>
+
+        {/* Cos'è il certificato introduttivo */}
+        <View style={styles.certCard} testID="checklist-cert-info">
+          <Pressable
+            onPress={() => setCertInfoOpen((v) => !v)}
+            style={styles.certHeader}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: certInfoOpen }}
+            testID="checklist-cert-toggle"
+          >
+            <View style={styles.certIcon}>
+              <Ionicons
+                name="document-text"
+                size={20}
+                color={topics.documenti.main}
+              />
+            </View>
+            <Text style={styles.certTitle}>{CERT_EXPLAINER.title}</Text>
+            <Ionicons
+              name={certInfoOpen ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={colors.onSurfaceTertiary}
+            />
+          </Pressable>
+          {certInfoOpen && (
+            <View testID="checklist-cert-body">
+              <Text style={styles.certIntro}>{CERT_EXPLAINER.intro}</Text>
+              {CERT_EXPLAINER.points.map((p) => (
+                <View key={p} style={styles.certRow}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={15}
+                    color={topics.documenti.main}
+                    style={{ marginTop: 2 }}
+                  />
+                  <Text style={styles.certText}>{p}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -309,5 +352,55 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: "#78350F",
     fontWeight: "500",
+  },
+  certCard: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderLeftWidth: 4,
+    borderLeftColor: topics.documenti.main,
+    padding: spacing.lg,
+  },
+  certHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  certIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.md,
+    backgroundColor: topics.documenti.soft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  certTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.onSurface,
+    lineHeight: 19,
+  },
+  certIntro: {
+    marginTop: spacing.md,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "600",
+    color: colors.onSurfaceSecondary,
+    marginBottom: spacing.sm,
+  },
+  certRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  certText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.onSurfaceSecondary,
   },
 });

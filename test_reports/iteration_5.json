@@ -1,0 +1,32 @@
+{
+  "summary": "TutelApp iteration 5 — BOTH backend and frontend tested. Backend: 27/27 pytest passed (6 NEW payment tests + 21 regression). Payments verified end-to-end via emergentintegrations Stripe proxy: POST /api/payments/checkout returns real checkout.stripe.com URL + sessionId and inserts a payment_transactions doc with payment_status=pending, amount=4.99, currency=eur, product=vault; GET /api/payments/status/{id} returns {status:open, paymentStatus:unpaid} for freshly created sessions; 404 for unknown session_id; 400 for originUrl='abc'. Assistant regression confirms Italian TutelApp prompt still returns Italian answer. Frontend: complete Expo web run at https://salute-naviga.preview.emergentagent.com — home shows the new hand-heart logo + big region card (LA TUA REGIONE Liguria) with 'Cambia' button; region modal opens, Lombardia selection persists after reload. Wizard: selecting 'Coniuge/Partner' reveals wizard-partner-note (D.Lgs 105/2022 nota). With work='Inoccupato/Pensionato' the results page correctly OMITS results-section-permessi and results-section-sede while SHOWING results-section-prestazioni. With work='Dipendente Privato' both results-section-permessi and results-section-sede appear. No fake diagnosis date rendered — only the bucket 'meno di 30 giorni fa' is shown. DeadlineCard: entering 15/06/2026 → 'Mancano 19 giorni' + '13 settembre 2026' scadenza; entering 31/12/2030 correctly shows error 'La data non può essere nel futuro'; value persists after full page reload. NextStepsSection cards (guide-steps-card, cert-explainer-card auto-expanded for cert='Non so cos\\'è', law104-card, invalidity-card) all render. Vault: click on vault-cta triggers POST /api/payments/checkout (200) and redirects to https://checkout.stripe.com/... (verified, not completed); setting localStorage 'salutenav:vaultUnlocked'='\"1\"' + reload correctly shows vault-unlocked box with vault-save-report-btn and vault-upload-btn. Patronati CAP search: query '1' returns results (no 'Nessuna sede trovata'), '19125' surfaces La Spezia/Sarzana, 'Genova' returns ACLI Genova. Checklist: checklist-cert-toggle expands/collapses checklist-cert-body correctly. No red-screen errors; only console warnings are the standard Expo web '\"shadow*\" style props are deprecated' notice.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/iteration_5.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py::create_payment_checkout hard-codes VAULT_PRICE_EUR=4.99 server-side and ignores any client amount — good (prevents tampering).",
+    "server.py::payment_status is idempotent (returns 'paid' immediately if already paid; conditional Mongo update uses {payment_status: {'$ne':'paid'}} to prevent double-processing) — good.",
+    "originUrl validation only checks .startswith('http'); a malicious value like 'https://evil.example.com' would still create a checkout with success/cancel URLs pointing there. Consider allow-listing the app's own domain or comparing against EXPO_PUBLIC_BACKEND_URL. Low-risk for now (client-controlled anyway) but worth noting.",
+    "risultati/[id].tsx is ~1063 lines — approaching the 700-line soft cap; consider splitting AssistantCard / ShareModal into their own components as it grows.",
+    "Console warning across the app: '\"shadow*\" style props are deprecated. Use \"boxShadow\"' — coming from react-native-web. Non-blocking, but should be migrated when convenient."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py (added TestPayments class with 5 new tests; strengthened assistant IT-language check)"
+  ],
+  "success_rate": {"backend": "100% (27/27)", "frontend": "100% (all scripted checks passed)"},
+  "seed_data_creation": "Test-only rows in payment_transactions (session_id from Stripe, deviceId='TEST_dev_pay') cleaned up in TestPayments class teardown. Reports/users/user_sessions/user_data test rows prefixed TEST_ and cleaned up in fixtures.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Stripe integration uses emergentintegrations (StripeCheckout) with the emergent proxy key sk_test_emergent — real Stripe checkout URLs (checkout.stripe.com/c/pay/cs_test_...) ARE produced but DO NOT complete a payment with a real card. To simulate the unlocked vault client-side, run in devtools: localStorage.setItem('salutenav:vaultUnlocked','\"1\"') (note the escaped double quotes — the web AsyncStorage wrapper stores JSON.stringify-ed values) and reload the results page. Wizard requires clicking wizard-next-btn 3 times through steps 1→3; use JS scrollIntoView({block:'center'}) before each option click because the fixed footer 'Avanti' button overlaps below-fold options otherwise. All 27 backend tests can be re-run with: pytest /app/backend/tests/backend_test.py -v --junitxml=/app/test_reports/pytest/pytest_results.xml.",
+  "rca_of_issue": "N/A — no bugs found. During testing initial Playwright runs timed out on step 2 because the fixed footer 'Avanti' (wizard-next-btn) sits on top of below-fold options; using JS scrollIntoView({block:'center'}) before each option click resolves it. This is not a product bug — the OptionCards do become tappable once scrolled, and mobile touch scrolling exposes them naturally."
+}

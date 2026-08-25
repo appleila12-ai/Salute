@@ -1,0 +1,520 @@
+// Cassaforte Referti — sblocco con pagamento Stripe reale (€4,99 una tantum),
+// salvataggio del PDF del report e caricamento documenti, tutto persistito.
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  ToastAndroid,
+  View,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
+
+import { colors, radius, spacing, topics } from "@/src/theme";
+import { storage } from "@/src/utils/storage";
+import { createCheckout, getPaymentStatus } from "@/src/lib/payments";
+import { buildReportHtml, Report } from "@/src/lib/reports";
+
+export const VAULT_UNLOCK_KEY = "salutenav:vaultUnlocked";
+export const VAULT_PENDING_KEY = "salutenav:pendingPayment";
+const VAULT_FILES_KEY = "salutenav:vaultFiles";
+
+interface VaultFile {
+  id: string;
+  name: string;
+  uri?: string;
+  date: string;
+}
+
+function toast(msg: string) {
+  if (Platform.OS === "android") ToastAndroid.show(msg, ToastAndroid.SHORT);
+  else console.log(msg);
+}
+
+export function VaultSection({ report }: { report: Report }) {
+  const [unlocked, setUnlocked] = useState(false);
+  const [files, setFiles] = useState<VaultFile[]>([]);
+  const [paying, setPaying] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const loadState = useCallback(async () => {
+    const u = await storage.getItem<string>(VAULT_UNLOCK_KEY, "");
+    if (u === "1") setUnlocked(true);
+    const raw = await storage.getItem<string>(VAULT_FILES_KEY, "");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setFiles(parsed);
+      } catch {
+        /* ignore */
+      }
+    }
+  }, []);
+
+  const persistFiles = async (list: VaultFile[]) => {
+    setFiles(list);
+    await storage.setItem(VAULT_FILES_KEY, JSON.stringify(list.slice(0, 50)));
+  };
+
+  const markPaid = useCallback(async () => {
+    setUnlocked(true);
+    await storage.setItem(VAULT_UNLOCK_KEY, "1");
+    await storage.removeItem(VAULT_PENDING_KEY);
+    toast("Cassaforte sbloccata!");
+  }, []);
+
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  const pollStatus = useCallback(
+    async (sessionId: string) => {
+      try {
+        const s = await getPaymentStatus(sessionId);
+        if (s.paymentStatus === "paid") {
+          stopPolling();
+          setChecking(false);
+          await markPaid();
+        } else if (s.status === "expired") {
+          stopPolling();
+          setChecking(false);
+          await storage.removeItem(VAULT_PENDING_KEY);
+        }
+      } catch {
+        /* transient error, next poll retries */
+      }
+    },
+    [markPaid],
+  );
+
+  // On mount: load persisted state and resume a pending payment if any
+  useEffect(() => {
+    (async () => {
+      await loadState();
+      const pending = await storage.getItem<string>(VAULT_PENDING_KEY, "");
+      if (pending) {
+        setChecking(true);
+        let attempts = 0;
+        pollRef.current = setInterval(async () => {
+          attempts += 1;
+          await pollStatus(pending);
+          if (attempts >= 8) {
+            stopPolling();
+            setChecking(false);
+          }
+        }, 2000);
+      }
+    })();
+    return stopPolling;
+  }, [loadState, pollStatus]);
+
+  const startCheckout = async () => {
+    if (paying) return;
+    setPaying(true);
+    setPayError(null);
+    try {
+      const origin =
+        Platform.OS === "web"
+          ? window.location.origin
+          : (process.env.EXPO_PUBLIC_BACKEND_URL as string);
+      const { url, sessionId } = await createCheckout(origin);
+      await storage.setItem(VAULT_PENDING_KEY, sessionId);
+      if (Platform.OS === "web") {
+        window.location.assign(url);
+        return;
+      }
+      await WebBrowser.openBrowserAsync(url);
+      // User returned from browser: verify payment
+      setChecking(true);
+      let attempts = 0;
+      pollRef.current = setInterval(async () => {
+        attempts += 1;
+        await pollStatus(sessionId);
+        if (attempts >= 20) {
+          stopPolling();
+          setChecking(false);
+        }
+      }, 2000);
+    } catch (e) {
+      console.warn("checkout failed", e);
+      setPayError("Impossibile avviare il pagamento. Riprova tra poco.");
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const addFile = async (name: string, uri?: string) => {
+    const entry: VaultFile = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name,
+      uri,
+      date: new Date().toISOString(),
+    };
+    await persistFiles([entry, ...files]);
+  };
+
+  const saveReportPdf = async () => {
+    const html = buildReportHtml(report);
+    const name = `Report_TutelApp_${new Date()
+      .toLocaleDateString("it-IT")
+      .replace(/\//g, "-")}.pdf`;
+    try {
+      if (Platform.OS === "web") {
+        await Print.printAsync({ html });
+        await addFile(name);
+        return;
+      }
+      const { uri } = await Print.printToFileAsync({ html });
+      const dest = `${FileSystem.documentDirectory}${Date.now()}_report.pdf`;
+      await FileSystem.copyAsync({ from: uri, to: dest });
+      await addFile(name, dest);
+      toast("PDF salvato in cassaforte");
+    } catch (e) {
+      console.warn("save pdf failed", e);
+      toast("Impossibile salvare il PDF");
+    }
+  };
+
+  const pickDocument = async () => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (res.canceled || !res.assets?.length) return;
+      const asset = res.assets[0];
+      let uri = asset.uri;
+      if (Platform.OS !== "web") {
+        const ext = asset.name?.split(".").pop() || "bin";
+        const dest = `${FileSystem.documentDirectory}${Date.now()}_doc.${ext}`;
+        await FileSystem.copyAsync({ from: asset.uri, to: dest });
+        uri = dest;
+      }
+      await addFile(asset.name || "Documento", uri);
+      toast("Documento aggiunto");
+    } catch (e) {
+      console.warn("pick failed", e);
+      toast("Impossibile caricare il documento");
+    }
+  };
+
+  const openFile = async (f: VaultFile) => {
+    if (!f.uri) {
+      toast("Anteprima non disponibile");
+      return;
+    }
+    try {
+      if (Platform.OS === "web") {
+        window.open(f.uri, "_blank");
+        return;
+      }
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) await Sharing.shareAsync(f.uri);
+    } catch (e) {
+      console.warn("open failed", e);
+    }
+  };
+
+  const removeFile = async (f: VaultFile) => {
+    if (f.uri && Platform.OS !== "web") {
+      FileSystem.deleteAsync(f.uri, { idempotent: true }).catch(() => {});
+    }
+    await persistFiles(files.filter((x) => x.id !== f.id));
+  };
+
+  return (
+    <View style={styles.card} testID="vault-card">
+      <View style={styles.header}>
+        <View style={styles.icon}>
+          <Ionicons
+            name={unlocked ? "lock-open" : "lock-closed"}
+            size={22}
+            color={topics.patronato.main}
+          />
+        </View>
+        <View
+          style={[
+            styles.badge,
+            unlocked && { backgroundColor: colors.successSoft },
+          ]}
+        >
+          <Text
+            style={[styles.badgeText, unlocked && { color: colors.success }]}
+          >
+            {unlocked ? "Attiva" : "€4,99 una tantum"}
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.title}>
+        Conserva tutti i referti in un unico posto
+      </Text>
+      <Text style={styles.body}>
+        Salva il PDF del report, carica foto e documenti di analisi, TAC e
+        verbali INPS: sempre pronti da mostrare alla Commissione Medica.
+      </Text>
+
+      {unlocked ? (
+        <View style={styles.unlockedBox} testID="vault-unlocked">
+          <View style={styles.actionsRow}>
+            <Pressable
+              onPress={saveReportPdf}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                pressed && { opacity: 0.85 },
+              ]}
+              accessibilityRole="button"
+              testID="vault-save-report-btn"
+            >
+              <Ionicons name="document-text" size={15} color="#FFFFFF" />
+              <Text style={styles.actionBtnText}>Salva report PDF</Text>
+            </Pressable>
+            <Pressable
+              onPress={pickDocument}
+              style={({ pressed }) => [
+                styles.actionBtnAlt,
+                pressed && { opacity: 0.85 },
+              ]}
+              accessibilityRole="button"
+              testID="vault-upload-btn"
+            >
+              <Ionicons
+                name="cloud-upload"
+                size={15}
+                color={topics.patronato.main}
+              />
+              <Text style={styles.actionBtnAltText}>Carica documento</Text>
+            </Pressable>
+          </View>
+          {files.length === 0 ? (
+            <Text style={styles.emptyText}>
+              La cassaforte è vuota: salva il report o carica il primo
+              documento.
+            </Text>
+          ) : (
+            files.map((f, i) => (
+              <View key={f.id} style={styles.fileRow} testID={`vault-file-${i}`}>
+                <Ionicons
+                  name="document-attach"
+                  size={16}
+                  color={topics.patronato.main}
+                />
+                <Pressable style={styles.flex} onPress={() => openFile(f)}>
+                  <Text style={styles.fileName} numberOfLines={1}>
+                    {f.name}
+                  </Text>
+                  <Text style={styles.fileDate}>
+                    {new Date(f.date).toLocaleDateString("it-IT")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => removeFile(f)}
+                  hitSlop={8}
+                  accessibilityLabel={`Elimina ${f.name}`}
+                  testID={`vault-file-delete-${i}`}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={17}
+                    color={colors.onSurfaceTertiary}
+                  />
+                </Pressable>
+              </View>
+            ))
+          )}
+        </View>
+      ) : (
+        <>
+          <Pressable
+            onPress={startCheckout}
+            disabled={paying || checking}
+            style={({ pressed }) => [
+              styles.payBtn,
+              (paying || checking) && { opacity: 0.7 },
+              pressed && { opacity: 0.85 },
+            ]}
+            accessibilityRole="button"
+            testID="vault-cta"
+          >
+            {paying || checking ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Ionicons name="card" size={16} color="#FFFFFF" />
+            )}
+            <Text style={styles.payBtnText}>
+              {checking
+                ? "Verifica pagamento…"
+                : paying
+                  ? "Apertura checkout…"
+                  : "Sblocca con Stripe · €4,99"}
+            </Text>
+          </Pressable>
+          {payError && (
+            <Text style={styles.errorText} testID="vault-pay-error">
+              {payError}
+            </Text>
+          )}
+          <Text style={styles.secureNote}>
+            Pagamento sicuro gestito da Stripe. Nessun abbonamento.
+          </Text>
+        </>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderLeftWidth: 4,
+    borderLeftColor: topics.patronato.main,
+    marginBottom: spacing.lg,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.md,
+  },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: topics.patronato.soft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badge: {
+    backgroundColor: colors.warningSoft,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.accentDark,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: colors.onSurface,
+    marginBottom: 4,
+  },
+  body: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.onSurfaceSecondary,
+    marginBottom: spacing.md,
+  },
+  payBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    backgroundColor: topics.patronato.main,
+    minHeight: 50,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.lg,
+  },
+  payBtnText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  errorText: {
+    marginTop: spacing.sm,
+    fontSize: 12,
+    color: colors.error,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  secureNote: {
+    marginTop: spacing.sm,
+    fontSize: 11,
+    color: colors.onSurfaceTertiary,
+    textAlign: "center",
+  },
+
+  unlockedBox: {
+    gap: spacing.sm,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: topics.patronato.main,
+    minHeight: 46,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+  },
+  actionBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  actionBtnAlt: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: topics.patronato.soft,
+    minHeight: 46,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+  },
+  actionBtnAltText: {
+    color: topics.patronato.main,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  emptyText: {
+    fontSize: 12,
+    color: colors.onSurfaceTertiary,
+    fontStyle: "italic",
+  },
+  fileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  fileName: {
+    fontSize: 12,
+    color: colors.onSurface,
+    fontWeight: "700",
+  },
+  fileDate: {
+    fontSize: 10,
+    color: colors.onSurfaceTertiary,
+    marginTop: 1,
+  },
+});

@@ -84,7 +84,7 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const lastBundle = useRef<string>("");
   const inFlight = useRef(false);
-  const scheduled = useRef<NodeJS.Timeout | null>(null);
+  const scheduled = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initial download after login: merge cloud INTO local by taking the freshest.
   const initialSync = useCallback(async () => {

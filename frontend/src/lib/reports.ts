@@ -1,4 +1,5 @@
 import { storage } from "@/src/utils/storage";
+import { NEXT_STEPS } from "@/src/lib/content";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const DEVICE_KEY = "salutenav:deviceId";
@@ -15,13 +16,13 @@ export type CertOption = "Sì" | "No" | "Non so cos'è";
 export interface Answers {
   who: WhoOption;
   when: WhenOption;
-  diagnosisDate: string; // ISO — derived from `when`
+  diagnosisDate?: string; // legacy field — no longer displayed (era una data fittizia)
   work: WorkOption;
   cert: CertOption;
 }
 
 export interface RightSection {
-  id: "permessi" | "sede" | "fiscali";
+  id: "permessi" | "sede" | "fiscali" | "prestazioni";
   title: string;
   intro: string;
   bullets: string[];
@@ -49,24 +50,28 @@ const whoRef = (w: WhoOption): string => {
   }
 };
 
+const PARTNER_FOOTER =
+  "Anche il convivente di fatto (convivenza registrata all'anagrafe, L. 76/2016) ha gli stessi diritti del coniuge per permessi e congedo straordinario (D.Lgs. 105/2022).";
+
 export function computeSections(a: Answers): RightSection[] {
   const isSelf = a.who === "Io stesso";
   const isPublic = a.work === "Dipendente Pubblico";
   const isPrivate = a.work === "Dipendente Privato";
   const isEmployee = isPublic || isPrivate;
-  // cert not currently used in the returned sections but kept in `a` for context.
+  const isUnemployed = a.work === "Inoccupato/Pensionato";
+  const isPartner = a.who === "Coniuge/Partner";
 
-  // -------- Section 1: Permessi e Congedo --------
-  const s1: RightSection = {
-    id: "permessi",
-    title: "Permessi lavorativi e Congedo Straordinario",
-    intro: isEmployee
-      ? `Se ${isSelf ? "sei" : whoRef(a.who) + " è"} riconosciuto con handicap grave (art. 3 c. 3 L.104), come lavoratore dipendente puoi richiedere questi benefici retribuiti.`
-      : a.work === "Autonomo"
-        ? "Come lavoratore autonomo non maturi i permessi retribuiti, ma alcune tutele restano attive."
-        : "Non essendoci un contratto di lavoro dipendente, i permessi non si applicano. Restano però attive altre tutele.",
-    bullets:
-      isEmployee
+  const sections: RightSection[] = [];
+
+  if (!isUnemployed) {
+    // -------- Permessi e Congedo (solo se c'è un rapporto di lavoro) --------
+    sections.push({
+      id: "permessi",
+      title: "Permessi lavorativi e Congedo Straordinario",
+      intro: isEmployee
+        ? `Se ${isSelf ? "sei" : whoRef(a.who) + " è"} riconosciuto con handicap grave (art. 3 c. 3 L.104), come lavoratore dipendente puoi richiedere questi benefici retribuiti.`
+        : "Come lavoratore autonomo non maturi i permessi retribuiti, ma alcune tutele restano attive.",
+      bullets: isEmployee
         ? [
             "3 giorni al mese di permesso retribuito, frazionabili anche in ore",
             !isSelf
@@ -74,49 +79,66 @@ export function computeSections(a: Answers): RightSection[] {
               : "Permessi orari giornalieri (1 o 2 ore) al posto dei 3 giorni",
             "Copertura contributiva figurativa durante i permessi",
           ]
-        : a.work === "Autonomo"
+        : [
+            "Nessun permesso retribuito, ma detrazioni per le spese di assistenza",
+            "Congedo di 2 anni possibile solo per il familiare dipendente convivente",
+          ],
+      footer: isPartner
+        ? PARTNER_FOOTER
+        : isEmployee
+          ? "Il beneficio si attiva dopo l'invio della domanda telematica all'INPS."
+          : undefined,
+    });
+
+    // -------- Sede lavorativa e smart working --------
+    sections.push({
+      id: "sede",
+      title: "Scelta della sede lavorativa e priorità smart working",
+      intro: isPublic
+        ? "Nel pubblico impiego hai priorità assoluta nella scelta della sede più vicina alla persona assistita."
+        : isPrivate
+          ? "Come dipendente privato hai protezioni forti contro trasferimenti indesiderati e accesso prioritario al lavoro agile."
+          : "Il diritto alla sede si applica solo ai lavoratori dipendenti. Puoi comunque richiedere adattamenti in altri contesti.",
+      bullets: isPublic
+        ? [
+            "Priorità nella scelta della sede al momento dell'assunzione o del trasferimento",
+            "Diritto di rifiutare il trasferimento verso sede più lontana dal familiare assistito",
+            "Precedenza nell'assegnazione al lavoro agile (D.Lgs. 105/2022)",
+          ]
+        : isPrivate
           ? [
-              "Nessun permesso retribuito, ma detrazioni per le spese di assistenza",
-              "Congedo di 2 anni possibile solo per il familiare dipendente convivente",
+              "Nessun trasferimento senza consenso ad altra sede (art. 33 c. 5 L.104)",
+              "Diritto di priorità al lavoro agile / smart working",
+              "Diritto di trasferimento verso sede più vicina, se disponibile",
             ]
           : [
-              "Nessun permesso lavorativo perché manca il contratto",
-              "Priorità nel collocamento mirato (L. 68/1999) per l'inserimento lavorativo",
+              "Non applicabile in assenza di rapporto di lavoro subordinato",
+              "Se cambi contratto ricontrolla i tuoi diritti",
             ],
-    footer: isEmployee
-      ? "Il beneficio si attiva dopo l'invio della domanda telematica all'INPS."
-      : undefined,
-  };
+    });
+  } else {
+    // -------- Prestazioni economiche (inoccupati e pensionati) --------
+    // Niente permessi/sede: senza contratto genererebbero solo confusione.
+    sections.push({
+      id: "prestazioni",
+      title: "Prestazioni economiche e assistenziali",
+      intro:
+        "Senza un contratto di lavoro dipendente i permessi lavorativi non si applicano. L'invalidità civile però dà accesso a prestazioni economiche e assistenziali importanti.",
+      bullets: [
+        "Indennità di accompagnamento se serve assistenza continua o non si cammina autonomamente (senza limiti di età o reddito)",
+        "Assegno mensile di assistenza con invalidità dal 74% (età lavorativa, entro limiti di reddito)",
+        "Pensione di inabilità con invalidità al 100% (entro limiti di reddito)",
+        "Dopo i 67 anni le prestazioni per invalidità parziale si trasformano in assegno sociale",
+        "Iscrizione al collocamento mirato (L. 68/1999) se si cerca lavoro, con invalidità dal 46%",
+      ],
+      footer: isPartner
+        ? PARTNER_FOOTER
+        : "Gli importi vengono aggiornati ogni anno: verifica le cifre attuali con INPS o Patronato.",
+    });
+  }
 
-  // -------- Section 2: Sede lavorativa e smart working --------
-  const s2: RightSection = {
-    id: "sede",
-    title: "Scelta della sede lavorativa e priorità smart working",
-    intro: isPublic
-      ? "Nel pubblico impiego hai priorità assoluta nella scelta della sede più vicina alla persona assistita."
-      : isPrivate
-        ? "Come dipendente privato hai protezioni forti contro trasferimenti indesiderati e accesso prioritario al lavoro agile."
-        : "Il diritto alla sede si applica solo ai lavoratori dipendenti. Puoi comunque richiedere adattamenti in altri contesti.",
-    bullets: isPublic
-      ? [
-          "Priorità nella scelta della sede al momento dell'assunzione o del trasferimento",
-          "Diritto di rifiutare il trasferimento verso sede più lontana dal familiare assistito",
-          "Precedenza nell'assegnazione al lavoro agile (D.L. 105/2022)",
-        ]
-      : isPrivate
-        ? [
-            "Nessun trasferimento senza consenso ad altra sede (art. 33 c. 5 L.104)",
-            "Diritto di priorità al lavoro agile / smart working",
-            "Diritto di trasferimento verso sede più vicina, se disponibile",
-        ]
-        : [
-            "Non applicabile in assenza di rapporto di lavoro subordinato",
-            "Se cambi contratto ricontrolla i tuoi diritti",
-          ],
-  };
-
-  // -------- Section 3: Esenzioni e Agevolazioni fiscali --------
-  const s3: RightSection = {
+  // -------- Esenzioni e Agevolazioni fiscali (sempre) --------
+  sections.push({
     id: "fiscali",
     title: "Esenzione ticket e Agevolazioni fiscali",
     intro:
@@ -130,19 +152,9 @@ export function computeSections(a: Answers): RightSection[] {
     ],
     footer:
       "Per applicare le esenzioni serve il verbale di invalidità civile e/o handicap.",
-  };
+  });
 
-  return [s1, s2, s3];
-}
-
-// -------- Utility: derive ISO date from "when" bucket (mid-point) --------
-export function deriveDiagnosisDate(when: WhenOption): string {
-  const now = new Date();
-  const past = new Date(now);
-  if (when === "Meno di 30 giorni fa") past.setDate(now.getDate() - 15);
-  else if (when === "Da 1 a 6 mesi fa") past.setMonth(now.getMonth() - 3);
-  else past.setMonth(now.getMonth() - 9);
-  return past.toISOString();
+  return sections;
 }
 
 export function formatDate(iso: string): string {
@@ -262,8 +274,11 @@ export async function askAssistant(
 // -------- PDF --------
 export function buildReportHtml(r: Report): string {
   const a = r.answers;
-  const diagDate = formatDate(a.diagnosisDate);
   const genDate = formatDate(r.createdAt);
+  const stepsHtml = NEXT_STEPS.map(
+    (s) =>
+      `<li><b>${escapeHtml(s.title)}</b><br/><span class="step-body">${escapeHtml(s.body)}</span></li>`,
+  ).join("");
   const sectionsHtml = r.sections
     .map((s) => {
       const bullets = s.bullets
@@ -300,6 +315,9 @@ export function buildReportHtml(r: Report): string {
   .right-intro { color: #1F2937; font-size: 13px; line-height: 1.55; margin-bottom: 10px; }
   ul { margin: 0; padding-left: 20px; }
   li { font-size: 13px; color: #1F2937; line-height: 1.5; margin-bottom: 4px; }
+  ol.steps { margin: 0; padding-left: 20px; }
+  ol.steps li { font-size: 13px; color: #1F2937; line-height: 1.5; margin-bottom: 10px; }
+  .step-body { color: #4B5563; font-size: 12px; }
   .footer-note { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #E5E7EB; color: #6B7280; font-size: 12px; }
   .warn { background: #FEF3C7; border-left: 4px solid #D97706; border-radius: 8px; padding: 14px 16px; color: #78350F; font-size: 13px; line-height: 1.5; margin: 24px 0; }
   .disclaimer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #E5E7EB; color: #6B7280; font-size: 11px; line-height: 1.5; }
@@ -313,7 +331,7 @@ export function buildReportHtml(r: Report): string {
   <div class="section-title">Le tue risposte</div>
   <div class="card">
     <div><b>Chi ha ricevuto la diagnosi:</b> ${escapeHtml(a.who)}</div>
-    <div><b>Data della diagnosi:</b> ${escapeHtml(diagDate)} (${escapeHtml(a.when.toLowerCase())})</div>
+    <div><b>Quando:</b> ${escapeHtml(a.when)}</div>
     <div><b>Situazione lavorativa:</b> ${escapeHtml(a.work)}</div>
     <div><b>Certificato INPS:</b> ${escapeHtml(a.cert)}</div>
   </div>
@@ -321,6 +339,9 @@ export function buildReportHtml(r: Report): string {
   <div class="warn">
     ⏰ Dal rilascio del certificato medico introduttivo hai <b>90 giorni</b> per inviare la domanda telematica all'INPS.
   </div>
+
+  <div class="section-title">E adesso cosa faccio? Il percorso passo dopo passo</div>
+  <ol class="steps">${stepsHtml}</ol>
 
   <div class="section-title">I tuoi diritti passo dopo passo</div>
   ${sectionsHtml}
