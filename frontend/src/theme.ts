@@ -1,27 +1,48 @@
+// TutelApp brand palette
+// Primary: Blu Ceruleo/Avio (reassuring)
+// Accent: Miele/Arancione chiaro (deadline warnings & key CTAs)
+// Background: high-contrast white + very light gray
 export const colors = {
+  // Surfaces
   surface: "#FFFFFF",
-  onSurface: "#111827",
-  surfaceSecondary: "#F4F7FA",
+  onSurface: "#0F172A",
+  surfaceSecondary: "#F5F8FC",
   onSurfaceSecondary: "#1F2937",
-  surfaceTertiary: "#E5E9F0",
-  onSurfaceTertiary: "#374151",
-  surfaceInverse: "#1E3A5F",
+  surfaceTertiary: "#E4EAF2",
+  onSurfaceTertiary: "#334155",
+  surfaceInverse: "#0F2A47",
   onSurfaceInverse: "#FFFFFF",
-  brand: "#2C6496",
-  brandPrimary: "#2C6496",
+
+  // Primary — cerulean/air blue
+  brand: "#2A75D3",
+  brandPrimary: "#2A75D3",
+  brandPrimaryDark: "#1F5CAE",
   onBrandPrimary: "#FFFFFF",
-  brandSecondary: "#EBF2FA",
-  onBrandSecondary: "#1A4971",
-  brandTertiary: "#D1E3F5",
+  brandSecondary: "#E6F0FB", // tinted background for chips/cards
+  onBrandSecondary: "#1F5CAE",
+  brandTertiary: "#CBDFF6",
   onBrandTertiary: "#153B5C",
+
+  // Accent — honey / warm amber
+  accent: "#F59E0B",
+  accentSoft: "#FEF3C7",
+  onAccent: "#78350F",
+  accentDark: "#B45309",
+
+  // States
   success: "#059669",
-  warning: "#D97706",
+  successSoft: "#D1FAE5",
+  warning: "#F59E0B",
+  warningSoft: "#FEF3C7",
   error: "#DC2626",
-  info: "#2563EB",
-  border: "#E5E7EB",
-  borderStrong: "#9CA3AF",
-  divider: "#F3F4F6",
-  muted: "#6B7280",
+  errorSoft: "#FEE2E2",
+  info: "#2A75D3",
+
+  // Neutrals
+  border: "#E2E8F0",
+  borderStrong: "#94A3B8",
+  divider: "#F1F5F9",
+  muted: "#64748B",
 };
 
 export const spacing = {
@@ -43,10 +64,15 @@ export const radius = {
 
 export const shadow = {
   card: {
-    shadowColor: "#0B2A48",
+    shadowColor: "#0F2A47",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 2,
   },
+};
+
+export const brand = {
+  name: "TutelApp",
+  tagline: "La tua guida semplice ai diritti e alla Legge 104",
 };

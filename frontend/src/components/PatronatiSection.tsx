@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Linking,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -19,9 +20,19 @@ const PRE_VISIT_ITEMS = [
   "Certificato Medico Introduttivo rilasciato dal medico curante",
 ];
 
+const SLOTS = [
+  "Domani · 10:00",
+  "Domani · 15:30",
+  "Giovedì · 09:15",
+  "Giovedì · 16:00",
+  "Venerdì · 11:30",
+];
+
 export function PatronatiSection() {
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [bookingFor, setBookingFor] = useState<Patronato | null>(null);
+  const [bookings, setBookings] = useState<Record<string, string>>({});
 
   const list = useMemo(() => findPatronati(PATRONATI, query), [query]);
 
@@ -155,22 +166,35 @@ export function PatronatiSection() {
               </View>
 
               <View style={styles.actionsRow}>
-                <Pressable
-                  onPress={() => call(p.phone)}
-                  style={({ pressed }) => [
-                    styles.actionBtn,
-                    styles.primaryAction,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Prenota appuntamento con ${p.name}`}
-                  testID={`patronato-book-${idx}`}
-                >
-                  <Ionicons name="call" size={14} color={colors.onBrandPrimary} />
-                  <Text style={styles.primaryActionText}>
-                    Prenota Appuntamento
-                  </Text>
-                </Pressable>
+                {bookings[p.id] ? (
+                  <View style={styles.confirmedBox} testID={`patronato-booked-${idx}`}>
+                    <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+                    <Text style={styles.confirmedText} numberOfLines={1}>
+                      Prenotato: {bookings[p.id]}
+                    </Text>
+                  </View>
+                ) : (
+                  <Pressable
+                    onPress={() => setBookingFor(p)}
+                    style={({ pressed }) => [
+                      styles.actionBtn,
+                      styles.primaryAction,
+                      pressed && { opacity: 0.85 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Prenota appuntamento con ${p.name}`}
+                    testID={`patronato-book-${idx}`}
+                  >
+                    <Ionicons
+                      name="calendar"
+                      size={14}
+                      color={colors.onBrandPrimary}
+                    />
+                    <Text style={styles.primaryActionText}>
+                      Prenota Slot
+                    </Text>
+                  </Pressable>
+                )}
                 <Pressable
                   onPress={() => setExpandedId(isOpen ? null : p.id)}
                   style={({ pressed }) => [
@@ -205,6 +229,22 @@ export function PatronatiSection() {
                   <DetailRow icon="time-outline" text={p.hours} />
 
                   <View style={styles.detailsActions}>
+                    <Pressable
+                      onPress={() => call(p.phone)}
+                      style={({ pressed }) => [
+                        styles.smallBtn,
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      accessibilityRole="button"
+                      testID={`patronato-call-${idx}`}
+                    >
+                      <Ionicons
+                        name="call"
+                        size={13}
+                        color={colors.brandPrimary}
+                      />
+                      <Text style={styles.smallBtnText}>Chiama</Text>
+                    </Pressable>
                     <Pressable
                       onPress={() => email(p.email)}
                       style={({ pressed }) => [
@@ -244,6 +284,73 @@ export function PatronatiSection() {
           );
         })
       )}
+
+      {/* Booking slot modal */}
+      <Modal
+        visible={bookingFor !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBookingFor(null)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setBookingFor(null)}
+        >
+          <Pressable
+            style={styles.bookingCard}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.bookingHeader}>
+              <View style={styles.flex}>
+                <Text style={styles.bookingTitle}>Scegli uno slot</Text>
+                <Text style={styles.bookingSub}>
+                  {bookingFor?.name} · {bookingFor?.city}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setBookingFor(null)}
+                hitSlop={12}
+                testID="booking-close-btn"
+                accessibilityLabel="Chiudi"
+              >
+                <Ionicons name="close" size={22} color={colors.onSurfaceTertiary} />
+              </Pressable>
+            </View>
+            {SLOTS.map((slot, sIdx) => (
+              <Pressable
+                key={slot}
+                onPress={() => {
+                  if (bookingFor) {
+                    setBookings((prev) => ({
+                      ...prev,
+                      [bookingFor.id]: slot,
+                    }));
+                    setBookingFor(null);
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.slotRow,
+                  pressed && { opacity: 0.85 },
+                ]}
+                accessibilityRole="button"
+                testID={`booking-slot-${sIdx}`}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={16}
+                  color={colors.brandPrimary}
+                />
+                <Text style={styles.slotText}>{slot}</Text>
+                <Text style={styles.slotConfirm}>Conferma</Text>
+              </Pressable>
+            ))}
+            <Text style={styles.bookingHelper}>
+              Simulazione slot dimostrativi. Prossimamente integrazione reale
+              con il sistema di prenotazione del patronato.
+            </Text>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -505,5 +612,86 @@ const styles = StyleSheet.create({
     color: colors.brandPrimary,
     fontSize: 12,
     fontWeight: "700",
+  },
+
+  confirmedBox: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    minHeight: 44,
+  },
+  confirmedText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.success,
+  },
+
+  // Booking modal
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(11,42,72,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing.xl,
+  },
+  bookingCard: {
+    width: "100%",
+    maxWidth: 380,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+  },
+  bookingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  bookingTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.onSurface,
+  },
+  bookingSub: {
+    fontSize: 12,
+    color: colors.onSurfaceTertiary,
+    marginTop: 2,
+  },
+  slotRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+  },
+  slotText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.onSurface,
+  },
+  slotConfirm: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.brandPrimary,
+  },
+  bookingHelper: {
+    fontSize: 11,
+    fontStyle: "italic",
+    color: colors.onSurfaceTertiary,
+    textAlign: "center",
+    marginTop: spacing.sm,
+    lineHeight: 15,
   },
 });

@@ -3,12 +3,14 @@
 ## Overview
 Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 / Invalidità Civile). Design minimale soft blue / white, tono empatico, sync backend anonimo.
 
-## Screens (soltanto 4, come richiesto)
+## Screens
 1. **Home** (`app/index.tsx`)
-   - Titolo "Navigatore Sanitario — La tua guida passo-passo ai diritti"
+   - **Pillola regione** (default Liguria) top-left con sheet 10 regioni
+   - **Icone login social** Google/Apple top-right (chip post-login, mock)
+   - Titolo "Navigatore Sanitario — La tua guida passo-passo ai diritti in {regione}"
    - Bottone "Inizia il percorso"
-   - 3 step indicator (Diagnosi / Lavoro / Documenti)
-   - Box discreto "App 100% gratuita — Offrici un caffè €3"
+   - **4 step** (Diagnosi / Lavoro / Documenti / Patronato) con badge attivo brand
+   - Box "Offrici un caffè €3"
 
 2. **Wizard** (`app/valutazione.tsx`)
    - Passo 1: chi + quando la diagnosi
@@ -26,10 +28,11 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
      - Checklist gialla "Prima di andare al Patronato" (Codice Fiscale, Documento d'Identità, Certificato Medico Introduttivo)
      - Campo di ricerca per CAP o città con ordinamento per prossimità
      - 3 patronati Sarzana in evidenza (INCA CGIL Via XXI Luglio, ACLI Via Lucri, ITAL UIL Via Landinelli) con badge stella
-     - Ogni card: "Prenota Appuntamento" (tel:) + "Indirizzo e contatti" (accordion con Email/Mappa)
+     - Ogni card: bottone "**Prenota Slot**" → modale con 5 slot orari (stile Calendly) → conferma con box verde "Prenotato: ..."
+     - Pannello "Indirizzo e contatti" con azioni Chiama / Email / Mappa
      - 10 patronati totali (Sarzana, La Spezia, Genova, Milano, Roma, Napoli, Torino, Bologna)
    - Box AI "Fai una domanda alla Legge 104" con 4 suggerimenti rapidi + risposta Claude Sonnet 4.6
-   - Card promozionale "Cassaforte Referti" (€4,99, prossimamente)
+   - Card **Cassaforte Referti** (€4,99): tap → **modale Stripe** placeholder → "Paga ora" sblocca l'upload dei referti (Referto_1.pdf, Referto_2.pdf…)
    - Link "Checklist documenti"
    - Sezione pieghevole "Cosa fare se la domanda viene respinta" (5 step di ricorso INPS)
 
@@ -59,3 +62,9 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Dashboard con 4 feature cards, banner Percorso guidato
 - Search bar, feature detail screens, storico, confronto, patronato, promemoria
 - i18n toggle (app solo IT)
+
+## Aggiornamento (Giugno 2026 - fork post-ricarica)
+- Rebranding "TutelApp" VERIFICATO: logo scudo/spunta, palette blu ceruleo #2A75D3 + arancio #F59E0B, home renderizza correttamente
+- Google Auth reale + Cloud Sync attivi (backend 22/22 test passati)
+- Problema "non vedo più niente" post-ricarica: risolto con riavvio servizi nel nuovo ambiente forkato
+- Prossimi step: Stripe reale per Cassaforte Referti (P1), refactor risultati/[id].tsx (P2)

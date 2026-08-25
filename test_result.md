@@ -101,3 +101,142 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Integrare autenticazione Google reale (Emergent-managed) al posto del mock, e
+  attivare la sincronizzazione silenziosa in cloud dei dati utente (report,
+  checklist, regione) via backend FastAPI + MongoDB.
+
+backend:
+  - task: "Auth: POST /api/auth/session"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "New endpoint. Riceve {session_id}, chiama Emergent auth,
+          upsert utente per email, crea/aggiorna riga in user_sessions con
+          expires_at (+7g), ritorna {session_token, user}. Rifiuta session_id
+          invalidi con 401. Testabile con session_id fake (deve 401)."
+  - task: "Auth: GET /api/auth/me"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Legge Authorization Bearer, verifica session_token in
+          user_sessions, normalizza expires_at tz-aware. Ritorna 401 se token
+          mancante/invalido/scaduto. Testabile con token fake -> 401."
+  - task: "Auth: POST /api/auth/logout"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Elimina la riga in user_sessions per il token corrente. Sempre 200."
+  - task: "Sync: POST /api/sync/upload e GET /api/sync/download"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Entrambi richiedono Bearer token. Upload upsert su
+          user_data by user_id (reports<=50, checklist, region, updatedAt).
+          Download restituisce bundle o vuoto. Senza token -> 401."
+  - task: "Startup: create MongoDB indexes"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "users.email unique, users.user_id unique,
+          user_sessions.session_token unique, user_sessions.expires_at TTL,
+          user_data.user_id unique. Verifica assenza errori a startup."
+  - task: "Regression: /api/assistant e /api/reports"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        -working: true
+        -agent: "main"
+        -comment: "Non modificati funzionalmente, solo riorganizzati. Testing
+          agent deve verificare che /api/assistant continui a rispondere e
+          /api/reports POST + share continuino a funzionare."
+
+frontend:
+  - task: "AuthProvider + login Google reale sulla Home"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/contexts/AuthContext.tsx, frontend/app/index.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Non testabile automaticamente (OAuth reale). Verificato solo
+          rendering: il pulsante 'Accedi' con logo Google appare, avatar utente
+          e menu con logout compaiono dopo login. Screenshot ok."
+  - task: "Cloud Sync silenzioso"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/contexts/CloudSyncContext.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Download all'accesso + upload periodico ogni 5s se dati
+          locali cambiano. Non testabile senza auth reale."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Auth: POST /api/auth/session"
+    - "Auth: GET /api/auth/me"
+    - "Auth: POST /api/auth/logout"
+    - "Sync: POST /api/sync/upload e GET /api/sync/download"
+    - "Startup: create MongoDB indexes"
+    - "Regression: /api/assistant e /api/reports"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    -agent: "main"
+    -message: |
+      Aggiunta autenticazione Google reale via Emergent + cloud sync.
+      Testare backend end-to-end SENZA session_id valido (basta verificare che
+      /api/auth/session con session_id fake ritorni 401, /api/auth/me con
+      token fake ritorni 401, /api/sync/* senza token 401, indexes creati a
+      startup, /api/assistant e /api/reports ancora funzionanti come regressione).
+      Non serve UI testing per il flusso OAuth Google (richiede utente reale).

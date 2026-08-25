@@ -1,0 +1,23 @@
+{
+  "summary": "Frontend-only regression + new-features test on the Expo web preview (mobile viewport 390x844). All 12 targeted tests passed across two runs (5/5 home features + 7/7 wizard/results flow). Verified: region pill default Liguria, 10-region sheet, Lombardia selection updates pill and subtitle text; Google/Apple social icons visible, Google tap swaps to user chip; 4-step indicator (Diagnosi/Lavoro/Documenti/Patronato) with first badge active; 'Inizia il percorso' navigates to 3-step wizard which reaches results via warning modal; vault CTA shows 'Sblocca con Stripe · €4,99', Stripe modal has pay/cancel, 'Paga ora' unlocks and 'Carica un referto' appends Referto_1.pdf, Referto_2.pdf as vault-file-{i} rows; 'Prenota Slot' opens modal with exactly 5 booking-slot-{i} entries, selecting one closes modal and shows 'Prenotato: Domani · 15:30' green box; contacts panel exposes Chiama/Email/Mappa (patronato-call/email/maps testIDs); existing flows still intact (AI assistant suggestion returns answer, share QR modal renders, appeal accordion toggles). No console/page errors observed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_3.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "index.tsx and risultati/[id].tsx are still well under limits but risultati/[id].tsx is ~1300 lines including styles; consider extracting Vault, Stripe modal and Share modal into sub-components in a future iteration to keep files < 700 LOC.",
+    "loginWith('Google'|'Apple') is a placeholder that just persists the provider string. Fine for demo, but make sure the main agent tracks this as a real OAuth follow-up (already flagged in code comment)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not requested)", "frontend": "100% (12/12)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Wizard 'who' options are: Io stesso, Un genitore, Un figlio, Coniuge/Partner (NOT 'Un familiare'). Use opt-who-{exact_label} testIDs. Full happy path: home-start-btn → opt-who-* + opt-when-* → wizard-next-btn → opt-work-* → wizard-next-btn → opt-cert-* → wizard-next-btn → warn-continue-btn → results-screen. For scrolling to elements on results screen use page.mouse.wheel loop (scrollIntoView on the root RN ScrollView returns null for nested testIDs sometimes).",
+  "rca_of_issue": "N/A - no bugs found"
+}

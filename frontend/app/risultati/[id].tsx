@@ -76,6 +76,9 @@ export default function Risultati() {
   const [askLoading, setAskLoading] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [vaultUnlocked, setVaultUnlocked] = useState(false);
+  const [stripeOpen, setStripeOpen] = useState(false);
+  const [vaultFiles, setVaultFiles] = useState<string[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -123,7 +126,7 @@ export default function Risultati() {
     if (!shareUrl) return;
     try {
       await Share.share({
-        message: `Ecco il mio report Navigatore Sanitario: ${shareUrl}`,
+        message: `Ecco il mio report TutelApp: ${shareUrl}`,
         url: shareUrl,
       });
     } catch (e) {
@@ -426,29 +429,70 @@ export default function Risultati() {
                 <Ionicons name="lock-closed" size={22} color={colors.brandPrimary} />
               </View>
               <View style={styles.vaultBadge}>
-                <Text style={styles.vaultBadgeText}>€4,99 una tantum</Text>
+                <Text style={styles.vaultBadgeText}>
+                  {vaultUnlocked ? "Attiva" : "€4,99 una tantum"}
+                </Text>
               </View>
             </View>
             <Text style={styles.vaultTitle}>
               Conserva tutti i referti in un unico posto
             </Text>
             <Text style={styles.vaultBody}>
-              Sblocca la Cassaforte Sanitaria per caricare foto e PDF di
-              analisi, TAC e verbali INPS. Ordinati in automatico per data,
-              pronti da mostrare alla Commissione Medica.
+              Carica foto e PDF di analisi, TAC e verbali INPS. Ordinati in
+              automatico per data, pronti da mostrare alla Commissione Medica.
             </Text>
-            <Pressable
-              onPress={() => toast("Prossimamente disponibile")}
-              style={({ pressed }) => [
-                styles.vaultBtn,
-                pressed && { opacity: 0.85 },
-              ]}
-              accessibilityRole="button"
-              testID="vault-cta"
-            >
-              <Text style={styles.vaultBtnText}>Prossimamente</Text>
-              <Ionicons name="arrow-forward" size={16} color={colors.brandPrimary} />
-            </Pressable>
+            {vaultUnlocked ? (
+              <View style={styles.vaultUnlocked} testID="vault-unlocked">
+                <Pressable
+                  onPress={() =>
+                    setVaultFiles((prev) => [
+                      ...prev,
+                      `Referto_${prev.length + 1}.pdf`,
+                    ])
+                  }
+                  style={({ pressed }) => [
+                    styles.vaultUploadBtn,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  accessibilityRole="button"
+                  testID="vault-upload-btn"
+                >
+                  <Ionicons name="cloud-upload" size={16} color={colors.onBrandPrimary} />
+                  <Text style={styles.vaultUploadText}>
+                    Carica un referto
+                  </Text>
+                </Pressable>
+                {vaultFiles.map((f, i) => (
+                  <View
+                    key={`${f}-${i}`}
+                    style={styles.vaultFileRow}
+                    testID={`vault-file-${i}`}
+                  >
+                    <Ionicons
+                      name="document-text"
+                      size={14}
+                      color={colors.success}
+                    />
+                    <Text style={styles.vaultFileText} numberOfLines={1}>
+                      {f}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setStripeOpen(true)}
+                style={({ pressed }) => [
+                  styles.vaultBtn,
+                  pressed && { opacity: 0.85 },
+                ]}
+                accessibilityRole="button"
+                testID="vault-cta"
+              >
+                <Text style={styles.vaultBtnText}>Sblocca con Stripe · €4,99</Text>
+                <Ionicons name="arrow-forward" size={16} color={colors.brandPrimary} />
+              </Pressable>
+            )}
           </View>
 
           {/* Checklist link */}
@@ -596,6 +640,64 @@ export default function Risultati() {
             >
               <Text style={styles.shareCloseText}>Chiudi</Text>
             </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+      {/* Stripe checkout modal (placeholder) */}
+      <Modal
+        visible={stripeOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStripeOpen(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setStripeOpen(false)}
+        >
+          <Pressable
+            style={styles.shareCard}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.stripeIconWrap}>
+              <Ionicons name="card" size={32} color={colors.brandPrimary} />
+            </View>
+            <Text style={styles.shareTitle}>Checkout Stripe · €4,99</Text>
+            <Text style={styles.shareSub}>
+              Spazio cloud crittografato per i tuoi referti. Pagamento una
+              tantum, nessun abbonamento.
+            </Text>
+            <View style={styles.shareActions}>
+              <Pressable
+                onPress={() => setStripeOpen(false)}
+                style={({ pressed }) => [
+                  styles.secondaryBtn,
+                  { flex: 1 },
+                  pressed && { opacity: 0.85 },
+                ]}
+                testID="stripe-cancel-btn"
+              >
+                <Text style={styles.secondaryBtnText}>Annulla</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setVaultUnlocked(true);
+                  setStripeOpen(false);
+                  toast("Cassaforte sbloccata");
+                }}
+                style={({ pressed }) => [
+                  styles.primaryBtn,
+                  { flex: 1 },
+                  pressed && { opacity: 0.85 },
+                ]}
+                testID="stripe-pay-btn"
+              >
+                <Text style={styles.primaryBtnText}>Paga ora</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.stripeFooter}>
+              Simulazione dimostrativa · Stripe reale verrà integrato nella
+              prossima release.
+            </Text>
           </Pressable>
         </Pressable>
       </Modal>
@@ -973,6 +1075,56 @@ const styles = StyleSheet.create({
     color: colors.brandPrimary,
     fontSize: 13,
     fontWeight: "800",
+  },
+  vaultUnlocked: {
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  vaultUploadBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.brandPrimary,
+    minHeight: 44,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.lg,
+  },
+  vaultUploadText: {
+    color: colors.onBrandPrimary,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  vaultFileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  vaultFileText: {
+    flex: 1,
+    fontSize: 12,
+    color: colors.onSurface,
+    fontWeight: "600",
+  },
+  stripeIconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brandSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
+  },
+  stripeFooter: {
+    fontSize: 10,
+    fontStyle: "italic",
+    color: colors.onSurfaceTertiary,
+    marginTop: spacing.sm,
+    textAlign: "center",
   },
 
   // Checklist link

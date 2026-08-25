@@ -286,11 +286,11 @@ export function buildReportHtml(r: Report): string {
 <html lang="it">
 <head>
 <meta charset="utf-8" />
-<title>Navigatore Sanitario — Report</title>
+<title>TutelApp — Report</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #111827; padding: 40px; margin: 0; }
-  .brand { color: #2C6496; font-weight: 800; font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase; }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #0F172A; padding: 40px; margin: 0; }
+  .brand { color: #2A75D3; font-weight: 800; font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase; }
   h1 { font-size: 24px; margin: 8px 0 4px 0; letter-spacing: -0.4px; }
   .date { color: #6B7280; font-size: 12px; margin-bottom: 24px; }
   .section-title { font-size: 12px; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: 1.1px; margin: 24px 0 8px 0; }
@@ -306,7 +306,7 @@ export function buildReportHtml(r: Report): string {
 </style>
 </head>
 <body>
-  <div class="brand">Navigatore Sanitario</div>
+  <div class="brand">TutelApp</div>
   <h1>La tua guida ai diritti</h1>
   <div class="date">Report generato il ${genDate}</div>
 

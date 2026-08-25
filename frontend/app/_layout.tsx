@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { LogBox } from "react-native";
 
 import { useIconFonts } from "@/src/hooks/use-icon-fonts";
+import { AuthProvider } from "@/src/contexts/AuthContext";
+import { CloudSyncProvider } from "@/src/contexts/CloudSyncContext";
 
 
 LogBox.ignoreAllLogs(true)
@@ -21,5 +23,11 @@ export default function RootLayout() {
 
   if (!loaded && !error) return null;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <AuthProvider>
+      <CloudSyncProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </CloudSyncProvider>
+    </AuthProvider>
+  );
 }
