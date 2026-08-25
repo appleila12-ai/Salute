@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -51,7 +50,6 @@ export default function Wizard() {
   const [when, setWhen] = useState<WhenOption | null>(null);
   const [work, setWork] = useState<WorkOption | null>(null);
   const [cert, setCert] = useState<CertOption | null>(null);
-  const [warnOpen, setWarnOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const canProceed = useMemo(() => {
@@ -71,8 +69,8 @@ export default function Wizard() {
     if (step < 3) {
       setStep((s) => (s + 1) as StepId);
     } else {
-      // Final step: show warning modal before results
-      setWarnOpen(true);
+      // Final step: go straight to results (avviso ora inline nel passo 3)
+      handleContinueToResults();
     }
   };
 
@@ -86,7 +84,6 @@ export default function Wizard() {
       cert,
     };
     const report: Report = await saveReport(answers);
-    setWarnOpen(false);
     setSaving(false);
     router.replace(`/risultati/${report.id}` as any);
   };
@@ -248,6 +245,15 @@ export default function Wizard() {
                   />
                 ))}
               </View>
+
+              {/* Avviso salva-tempo, integrato nella domanda */}
+              <View style={styles.certWarnBanner} testID="cert-inline-warning">
+                <Ionicons name="warning" size={18} color="#B45309" />
+                <Text style={styles.certWarnText}>
+                  <Text style={styles.certWarnStrong}>Salva-tempo: </Text>
+                  {"verifica che il medico abbia spuntato SIA l'Invalidità Civile SIA la Legge 104 sul certificato, per non ripetere la procedura!"}
+                </Text>
+              </View>
             </View>
           )}
         </ScrollView>
@@ -261,25 +267,29 @@ export default function Wizard() {
         >
           <Pressable
             onPress={handleNext}
-            disabled={!canProceed}
+            disabled={!canProceed || saving}
             style={({ pressed }) => [
               styles.primaryBtn,
-              !canProceed && styles.primaryBtnDisabled,
-              canProceed && pressed && { opacity: 0.85 },
+              (!canProceed || saving) && styles.primaryBtnDisabled,
+              canProceed && !saving && pressed && { opacity: 0.85 },
             ]}
             accessibilityRole="button"
-            accessibilityState={{ disabled: !canProceed }}
+            accessibilityState={{ disabled: !canProceed || saving }}
             testID="wizard-next-btn"
           >
             <Text
               style={[
                 styles.primaryBtnText,
-                !canProceed && styles.primaryBtnTextDisabled,
+                (!canProceed || saving) && styles.primaryBtnTextDisabled,
               ]}
             >
-              {step === 3 ? "Vedi i tuoi diritti" : "Avanti"}
+              {saving
+                ? "Elaborazione…"
+                : step === 3
+                  ? "Vedi i tuoi diritti"
+                  : "Avanti"}
             </Text>
-            {canProceed && (
+            {canProceed && !saving && (
               <Ionicons
                 name="arrow-forward"
                 size={18}
@@ -289,48 +299,6 @@ export default function Wizard() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-
-      {/* Warning modal */}
-      <Modal
-        visible={warnOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setWarnOpen(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.warnCard}>
-            <View style={styles.warnIconWrap}>
-              <Ionicons name="warning" size={32} color={colors.warning} />
-            </View>
-            <Text style={styles.warnTitle}>Attenzione, salva-tempo</Text>
-            <Text style={styles.warnBody}>
-              {"Verifica che il medico abbia spuntato SIA l'Invalidità Civile SIA la Legge 104 sul certificato per non ripetere la procedura!"}
-            </Text>
-            <Pressable
-              onPress={handleContinueToResults}
-              disabled={saving}
-              style={({ pressed }) => [
-                styles.warnCta,
-                saving && { opacity: 0.7 },
-                !saving && pressed && { opacity: 0.85 },
-              ]}
-              accessibilityRole="button"
-              testID="warn-continue-btn"
-            >
-              <Text style={styles.warnCtaText}>
-                {saving ? "Elaborazione…" : "Ho capito, prosegui"}
-              </Text>
-              {!saving && (
-                <Ionicons
-                  name="arrow-forward"
-                  size={18}
-                  color={colors.onBrandPrimary}
-                />
-              )}
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -534,59 +502,25 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceTertiary,
   },
 
-  // Modal
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(11,42,72,0.55)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.xl,
-  },
-  warnCard: {
-    width: "100%",
-    maxWidth: 380,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    alignItems: "center",
-  },
-  warnIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.pill,
-    backgroundColor: "#FEF3C7",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.md,
-  },
-  warnTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: colors.onSurface,
-    textAlign: "center",
-    marginBottom: spacing.sm,
-  },
-  warnBody: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.onSurfaceSecondary,
-    textAlign: "center",
-    marginBottom: spacing.xl,
-  },
-  warnCta: {
+  // Avviso salva-tempo inline (passo 3)
+  certWarnBanner: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "flex-start",
     gap: spacing.sm,
-    alignSelf: "stretch",
-    backgroundColor: colors.brandPrimary,
-    minHeight: 52,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.xl,
+    backgroundColor: "#FFFBEB",
+    borderRadius: radius.md,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.warning,
+    padding: spacing.md,
+    marginTop: spacing.lg,
   },
-  warnCtaText: {
-    color: colors.onBrandPrimary,
-    fontSize: 15,
-    fontWeight: "700",
+  certWarnText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#78350F",
+  },
+  certWarnStrong: {
+    fontWeight: "800",
   },
 });

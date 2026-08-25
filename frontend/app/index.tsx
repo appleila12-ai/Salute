@@ -18,6 +18,7 @@ import { storage } from "@/src/utils/storage";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useCloudSync } from "@/src/contexts/CloudSyncContext";
 import { Logo, Wordmark } from "@/src/components/Brand";
+import { GuideStepsCard } from "@/src/components/NextStepsSection";
 import { formatDate, listReports, Report } from "@/src/lib/reports";
 
 const COFFEE_URL = "https://www.buymeacoffee.com/salutenav";
@@ -34,13 +35,6 @@ const REGIONI = [
   "Toscana",
   "Sicilia",
   "Puglia",
-];
-
-const STEPS = [
-  { num: 1, label: "Diagnosi", color: "#2A75D3", soft: "#E6F0FB" },
-  { num: 2, label: "Lavoro", color: "#EA580C", soft: "#FFEDD5" },
-  { num: 3, label: "Documenti", color: "#B45309", soft: "#FEF3C7" },
-  { num: 4, label: "Patronato", color: "#DB2777", soft: "#FCE7F3" },
 ];
 
 export default function Home() {
@@ -259,23 +253,9 @@ export default function Home() {
           <Ionicons name="arrow-forward" size={22} color={colors.onBrandPrimary} />
         </Pressable>
 
-        {/* 4-step indicator — un colore per argomento */}
-        <View style={styles.stepsRow} testID="home-steps">
-          {STEPS.map((s, i) => (
-            <View key={s.num} style={styles.stepGroup}>
-              <View style={styles.stepIndicator}>
-                <View
-                  style={[styles.stepBadge, { backgroundColor: s.soft }]}
-                >
-                  <Text style={[styles.stepBadgeText, { color: s.color }]}>
-                    {s.num}
-                  </Text>
-                </View>
-                <Text style={styles.stepLabel}>{s.label}</Text>
-              </View>
-              {i < STEPS.length - 1 && <View style={styles.stepSep} />}
-            </View>
-          ))}
+        {/* Il Percorso — mappa dei 5 passi dell'iter */}
+        <View style={styles.guideWrap}>
+          <GuideStepsCard />
         </View>
 
         <View style={styles.spacer} />
@@ -702,47 +682,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  stepsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+  guideWrap: {
     marginTop: spacing.lg,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-  },
-  stepGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  stepIndicator: {
-    alignItems: "center",
-    gap: 4,
-    width: 60,
-  },
-  stepBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surfaceSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepBadgeText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.borderStrong,
-  },
-  stepLabel: {
-    fontSize: 10,
-    color: colors.onSurfaceTertiary,
-    fontWeight: "600",
-  },
-  stepSep: {
-    width: 12,
-    height: 1.5,
-    backgroundColor: colors.border,
-    marginBottom: 14,
   },
 
   spacer: { flex: 1, minHeight: spacing.lg },

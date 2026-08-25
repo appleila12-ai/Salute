@@ -88,3 +88,10 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Guida Servizi Sociali salvata anche in Cassaforte se sbloccata (nome Guida_Servizi_Sociali_{regione}.pdf)
 - Refactor: risultati/[id].tsx 1067→~400 righe; estratti AssistantCard, ShareModal, AppealSection, RightsSectionCard; nuova lib condivisa src/lib/vault.ts (usata da VaultSection, payment-success, PracticalHelpSection)
 - Test: frontend E2E completo validato senza bug (iteration_6.json)
+
+## Iterazione 7 (Giugno 2026) — UX wizard e riposizionamento blocchi
+- RIMOSSO il modal "Attenzione, salva-tempo" nel wizard (passo 3): l'avviso è ora un banner inline giallo sotto le opzioni della Domanda 3; "Vedi i tuoi diritti" porta direttamente ai risultati (warn-continue-btn non esiste più)
+- Card "IL PERCORSO — Hai la diagnosi in mano: e adesso?" SPOSTATA dai Risultati alla HOME, subito sotto "Inizia il percorso" (componente GuideStepsCard esportato da NextStepsSection)
+- Rimosso l'indicatore 4-step dalla home; ordine home: branding → regione → Inizia il percorso → Percorso 5 passi → storico → box sostegno
+- Risultati invariati per il resto (Patronati, cert explainer, 104/invalidità, vault, AI)
+- Verificato con screenshot E2E: wizard 3 step senza modal, banner inline presente, percorso in home, risultati integri

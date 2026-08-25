@@ -21,6 +21,54 @@ interface Props {
   who: WhoOption;
 }
 
+/** Card "Il Percorso" — 5 passi dall'avere la diagnosi ai benefici.
+ *  Mostrata in HOME, sotto il bottone "Inizia il percorso". */
+export function GuideStepsCard() {
+  return (
+    <View
+      style={[styles.card, { borderLeftColor: topics.percorso.main }]}
+      testID="guide-steps-card"
+    >
+      <View style={styles.cardHeader}>
+        <View style={[styles.cardIcon, { backgroundColor: topics.percorso.soft }]}>
+          <Ionicons name="footsteps" size={22} color={topics.percorso.main} />
+        </View>
+        <View style={styles.flex}>
+          <Text style={[styles.topicLabel, { color: topics.percorso.main }]}>
+            IL PERCORSO
+          </Text>
+          <Text style={styles.cardTitle}>Hai la diagnosi in mano: e adesso?</Text>
+        </View>
+      </View>
+      <View style={styles.timeline}>
+        {NEXT_STEPS.map((s, idx) => (
+          <View key={s.title} style={styles.timelineRow}>
+            <View style={styles.timelineLeft}>
+              <View
+                style={[styles.stepDot, { backgroundColor: topics.percorso.main }]}
+              >
+                <Text style={styles.stepDotText}>{idx + 1}</Text>
+              </View>
+              {idx < NEXT_STEPS.length - 1 && (
+                <View
+                  style={[
+                    styles.timelineBar,
+                    { backgroundColor: topics.percorso.soft },
+                  ]}
+                />
+              )}
+            </View>
+            <View style={styles.timelineContent}>
+              <Text style={styles.stepTitle}>{s.title}</Text>
+              <Text style={styles.stepBody}>{s.body}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export function NextStepsSection({ work, cert, who }: Props) {
   const isUnemployed = work === "Inoccupato/Pensionato";
   const [certOpen, setCertOpen] = useState(cert === "Non so cos'è");
@@ -32,54 +80,6 @@ export function NextStepsSection({ work, cert, who }: Props) {
 
   return (
     <View testID="next-steps-section">
-      {/* Percorso passo-passo */}
-      <View
-        style={[styles.card, { borderLeftColor: topics.percorso.main }]}
-        testID="guide-steps-card"
-      >
-        <View style={styles.cardHeader}>
-          <View style={[styles.cardIcon, { backgroundColor: topics.percorso.soft }]}>
-            <Ionicons name="footsteps" size={22} color={topics.percorso.main} />
-          </View>
-          <View style={styles.flex}>
-            <Text style={[styles.topicLabel, { color: topics.percorso.main }]}>
-              IL PERCORSO
-            </Text>
-            <Text style={styles.cardTitle}>
-              Hai la diagnosi in mano: e adesso?
-            </Text>
-          </View>
-        </View>
-        <View style={styles.timeline}>
-          {NEXT_STEPS.map((s, idx) => (
-            <View key={s.title} style={styles.timelineRow}>
-              <View style={styles.timelineLeft}>
-                <View
-                  style={[
-                    styles.stepDot,
-                    { backgroundColor: topics.percorso.main },
-                  ]}
-                >
-                  <Text style={styles.stepDotText}>{idx + 1}</Text>
-                </View>
-                {idx < NEXT_STEPS.length - 1 && (
-                  <View
-                    style={[
-                      styles.timelineBar,
-                      { backgroundColor: topics.percorso.soft },
-                    ]}
-                  />
-                )}
-              </View>
-              <View style={styles.timelineContent}>
-                <Text style={styles.stepTitle}>{s.title}</Text>
-                <Text style={styles.stepBody}>{s.body}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      </View>
-
       {/* Certificato introduttivo — spiegazione */}
       <View
         style={[styles.card, { borderLeftColor: topics.documenti.main }]}
