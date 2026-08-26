@@ -29,7 +29,8 @@ function notify(files: VaultFile[]) {
 }
 
 export async function isVaultUnlocked(): Promise<boolean> {
-  return (await storage.getItem<string>(VAULT_UNLOCK_KEY, "")) === "1";
+  // Cassaforte GRATUITA: il pagamento è disattivato (riattivabile in futuro).
+  return true;
 }
 
 export async function unlockVault(): Promise<void> {

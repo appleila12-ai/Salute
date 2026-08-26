@@ -1,9 +1,9 @@
-// Cassaforte Referti — sblocco con pagamento Stripe reale (€4,99 una tantum),
-// salvataggio del PDF del report e caricamento documenti, tutto persistito.
+// Cassaforte Referti — GRATUITA (il pagamento Stripe è stato disattivato su
+// richiesta: potrà essere riattivato in futuro; il backend resta pronto).
+// Salvataggio del PDF del report e caricamento documenti, tutto persistito.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Platform,
   Pressable,
   StyleSheet,
@@ -12,24 +12,18 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import * as WebBrowser from "expo-web-browser";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 
 import { colors, radius, spacing, topics } from "@/src/theme";
-import { storage } from "@/src/utils/storage";
-import { createCheckout, getPaymentStatus } from "@/src/lib/payments";
 import { buildReportHtml, Report } from "@/src/lib/reports";
 import {
   addVaultFile,
-  isVaultUnlocked,
   loadVaultFiles,
   removeVaultFileEntry,
   subscribeVault,
-  unlockVault,
-  VAULT_PENDING_KEY,
   VaultFile,
 } from "@/src/lib/vault";
 
@@ -39,111 +33,17 @@ function toast(msg: string) {
 }
 
 export function VaultSection({ report }: { report: Report }) {
-  const [unlocked, setUnlocked] = useState(false);
   const [files, setFiles] = useState<VaultFile[]>([]);
-  const [paying, setPaying] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [payError, setPayError] = useState<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadState = useCallback(async () => {
-    if (await isVaultUnlocked()) setUnlocked(true);
     setFiles(await loadVaultFiles());
   }, []);
 
-  const markPaid = useCallback(async () => {
-    setUnlocked(true);
-    await unlockVault();
-    toast("Cassaforte sbloccata!");
-  }, []);
-
-  const stopPolling = () => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  };
-
-  const pollStatus = useCallback(
-    async (sessionId: string) => {
-      try {
-        const s = await getPaymentStatus(sessionId);
-        if (s.paymentStatus === "paid") {
-          stopPolling();
-          setChecking(false);
-          await markPaid();
-        } else if (s.status === "expired") {
-          stopPolling();
-          setChecking(false);
-          await storage.removeItem(VAULT_PENDING_KEY);
-        }
-      } catch {
-        /* transient error, next poll retries */
-      }
-    },
-    [markPaid],
-  );
-
-  // On mount: load persisted state, subscribe to vault changes,
-  // resume a pending payment if any
   useEffect(() => {
     const unsubscribe = subscribeVault(setFiles);
-    (async () => {
-      await loadState();
-      const pending = await storage.getItem<string>(VAULT_PENDING_KEY, "");
-      if (pending) {
-        setChecking(true);
-        let attempts = 0;
-        pollRef.current = setInterval(async () => {
-          attempts += 1;
-          await pollStatus(pending);
-          if (attempts >= 8) {
-            stopPolling();
-            setChecking(false);
-          }
-        }, 2000);
-      }
-    })();
-    return () => {
-      unsubscribe();
-      stopPolling();
-    };
-  }, [loadState, pollStatus]);
-
-  const startCheckout = async () => {
-    if (paying) return;
-    setPaying(true);
-    setPayError(null);
-    try {
-      const origin =
-        Platform.OS === "web"
-          ? window.location.origin
-          : (process.env.EXPO_PUBLIC_BACKEND_URL as string);
-      const { url, sessionId } = await createCheckout(origin);
-      await storage.setItem(VAULT_PENDING_KEY, sessionId);
-      if (Platform.OS === "web") {
-        window.location.assign(url);
-        return;
-      }
-      await WebBrowser.openBrowserAsync(url);
-      // User returned from browser: verify payment
-      setChecking(true);
-      let attempts = 0;
-      pollRef.current = setInterval(async () => {
-        attempts += 1;
-        await pollStatus(sessionId);
-        if (attempts >= 20) {
-          stopPolling();
-          setChecking(false);
-        }
-      }, 2000);
-    } catch (e) {
-      console.warn("checkout failed", e);
-      setPayError("Impossibile avviare il pagamento. Riprova tra poco.");
-    } finally {
-      setPaying(false);
-    }
-  };
+    loadState();
+    return unsubscribe;
+  }, [loadState]);
 
   const saveReportPdf = async () => {
     const html = buildReportHtml(report);
@@ -218,23 +118,10 @@ export function VaultSection({ report }: { report: Report }) {
     <View style={styles.card} testID="vault-card">
       <View style={styles.header}>
         <View style={styles.icon}>
-          <Ionicons
-            name={unlocked ? "lock-open" : "lock-closed"}
-            size={22}
-            color={topics.patronato.main}
-          />
+          <Ionicons name="lock-open" size={22} color={topics.patronato.main} />
         </View>
-        <View
-          style={[
-            styles.badge,
-            unlocked && { backgroundColor: colors.successSoft },
-          ]}
-        >
-          <Text
-            style={[styles.badgeText, unlocked && { color: colors.success }]}
-          >
-            {unlocked ? "Attiva" : "€4,99 una tantum"}
-          </Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>Inclusa</Text>
         </View>
       </View>
       <Text style={styles.title}>
@@ -245,8 +132,7 @@ export function VaultSection({ report }: { report: Report }) {
         verbali INPS: sempre pronti da mostrare alla Commissione Medica.
       </Text>
 
-      {unlocked ? (
-        <View style={styles.unlockedBox} testID="vault-unlocked">
+      <View style={styles.unlockedBox} testID="vault-unlocked">
           <View style={styles.actionsRow}>
             <Pressable
               onPress={saveReportPdf}
@@ -312,44 +198,8 @@ export function VaultSection({ report }: { report: Report }) {
                 </Pressable>
               </View>
             ))
-          )}
-        </View>
-      ) : (
-        <>
-          <Pressable
-            onPress={startCheckout}
-            disabled={paying || checking}
-            style={({ pressed }) => [
-              styles.payBtn,
-              (paying || checking) && { opacity: 0.7 },
-              pressed && { opacity: 0.85 },
-            ]}
-            accessibilityRole="button"
-            testID="vault-cta"
-          >
-            {paying || checking ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Ionicons name="card" size={16} color="#FFFFFF" />
-            )}
-            <Text style={styles.payBtnText}>
-              {checking
-                ? "Verifica pagamento…"
-                : paying
-                  ? "Apertura checkout…"
-                  : "Sblocca con Stripe · €4,99"}
-            </Text>
-          </Pressable>
-          {payError && (
-            <Text style={styles.errorText} testID="vault-pay-error">
-              {payError}
-            </Text>
-          )}
-          <Text style={styles.secureNote}>
-            Pagamento sicuro gestito da Stripe. Nessun abbonamento.
-          </Text>
-        </>
-      )}
+        )}
+      </View>
     </View>
   );
 }
@@ -381,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   badge: {
-    backgroundColor: colors.warningSoft,
+    backgroundColor: colors.successSoft,
     paddingHorizontal: spacing.md,
     paddingVertical: 4,
     borderRadius: radius.pill,
@@ -389,7 +239,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "800",
-    color: colors.accentDark,
+    color: colors.success,
   },
   title: {
     fontSize: 15,
@@ -402,34 +252,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.onSurfaceSecondary,
     marginBottom: spacing.md,
-  },
-  payBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    backgroundColor: topics.patronato.main,
-    minHeight: 50,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.lg,
-  },
-  payBtnText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  errorText: {
-    marginTop: spacing.sm,
-    fontSize: 12,
-    color: colors.error,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  secureNote: {
-    marginTop: spacing.sm,
-    fontSize: 11,
-    color: colors.onSurfaceTertiary,
-    textAlign: "center",
   },
 
   unlockedBox: {

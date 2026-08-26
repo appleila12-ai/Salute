@@ -145,3 +145,11 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Frontend /app/frontend/app/sentinella.tsx: pagina admin nascosta — accesso con LONG PRESS (600ms) sul badge "Dati aggiornati al..." nella pagina /importi; bottone "Avvia controllo AI", polling 4s, card risultati con badge colorati, bottoni Applica/Ignora, link fonte
 - VERIFICATO E2E: check reale ha trovato discrepanza vera (accompagnamento 2026: € 551,53 da Messaggio INPS n. 628 vs € 552,27 in DB) → applicata → /api/content aggiornato
 - TODO memorizzato: Mini Pannello Admin (riproporre PRIMA della pubblicazione, richiesta esplicita utente)
+
+## Iterazione 14 (Giugno 2026) — Cassaforte gratuita (paywall rimosso)
+- Su richiesta utente: RIMOSSO il pagamento €4,99 dalla Cassaforte Referti — ora GRATUITA e subito attiva (badge "Inclusa", bottoni Salva report PDF / Carica documento visibili senza checkout)
+- VaultSection.tsx ripulito da tutta la logica Stripe (checkout, polling, stati paying/checking); vault.ts: isVaultUnlocked() ritorna sempre true
+- Il codice Stripe RESTA PRONTO per riattivazione futura: backend /api/payments/* intatto, payments.ts e payment-success.tsx conservati (dormienti)
+- NOTA UTENTE: il pagamento potrà essere reintrodotto "in un secondo momento" — richiesta esplicita
+- Verificato E2E con screenshot: wizard completo → risultati → card cassaforte senza bottone Stripe, upload disponibile
+- Ribadito dall'utente: MAI fare deploy senza autorizzazione esplicita
