@@ -1,0 +1,31 @@
+{
+  "summary": "TutelApp iteration 7 — BACKEND + FRONTEND validated end-to-end. Backend: pytest tests/test_iteration_7.py → 15/15 passed. (a) Static illustrations: all 11 files GET 200 image/jpeg from https://salute-naviga.preview.emergentagent.com/api/assets/illustrations/{home_hero,wizard_diagnosi,wizard_lavoro,wizard_certificato,diritti104,patronati,territorio,trasporti,domiciliare,fisioterapia,rsa}.jpg (payload >1KB each). (b) GET /api/content returns updatedAt='2026-06-01', fonte='Circolare INPS importi 2026', importi=4 (accompagnamento € 552,27 / mese with url INPS), faq=10 (all with keys d+r), glossario=12 (all with t+d, includes AP70/Verbale/ATP), dopoVerbale=7 (titles include 'Esenzione ticket sanitario', 'IVA 4%…' and body references 'AP70'). Two consecutive calls return byte-identical JSON, no `_id` leaked (seed idempotente OK). FRONTEND (390x844 mobile viewport): (1) Home hero: <img> has src=https://salute-naviga.preview.emergentagent.com/api/assets/illustrations/home_hero.jpg with naturalWidth=1000 — bug fix confirmed, no empty rectangle. (2) home-title Wordmark shows 'TutelApp' with tagline. (3) home-faq-link → /faq: 10 faq-item-* rendered, tapping faq-item-0 expands faq-answer-0 (151 chars, 'In media 2-4 mesi…'), glossario visible with 'AP70' and 'Verbale' terms. (4) home-importi-link → /importi: importi-updated-badge reads 'Dati aggiornati al 01 giugno 2026 · Circolare INPS importi 2026', 4 importo-card-* rendered, '€ 552,27' + 'Verifica sulla fonte ufficiale INPS' link visible. (5) Wizard (Passo 1..3): home-start-btn → opt-who-Io stesso + opt-when-Meno di 30 giorni fa → wizard-next-btn → opt-work-Dipendente Privato → next → opt-cert-Sì → next lands directly on /risultati/{id} (nessun modal salva-tempo). VerbaleSection: verbale-toggle expands verbale-body (1540 chars) containing 'Esenzione ticket', 'IVA 4%', 'AP70' and 7 numbered steps (1..7). (6) Regression: /patronati has 1 remote illustration <img>, /territorio has 5 remote illustration <img>. Zero console errors captured across all runs.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration_7.py",
+    "/app/test_reports/pytest/iter7_results.xml",
+    "/app/test_reports/iteration_7.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py GET /api/content: seed is inserted with `dict(APP_CONTENT_SEED)` (shallow copy) — motor mutates the doc adding `_id`; the returned `doc` is then rebuilt as `{k: v for k, v in APP_CONTENT_SEED.items()}` on the first-request branch which strips `_id`, and the second-request branch uses `find_one(..., {'_id': 0})` which also strips it. Both branches confirmed clean (verified: no `_id` in JSON). Still, using `dict(APP_CONTENT_SEED)` for insert only shallow-copies nested lists/dicts, so an accidental mutation on the seed elsewhere would leak into APP_CONTENT_SEED. Consider `copy.deepcopy(APP_CONTENT_SEED)` for safety.",
+    "server.py mounts `/api/assets` StaticFiles AFTER `app.include_router(api_router)` and adds CORS middleware AFTER the router include — order works because FastAPI mounts are effective independently, but conventionally middleware should be added before include_router. Non-blocking.",
+    "src/lib/remoteContent.ts stores the whole content JSON under CACHE_KEY on every successful fetch — fine for size (< 30KB), but consider a lightweight ETag/If-Modified-Since when the content grows.",
+    "VerbaleSection.tsx calls loadAppContent() on mount independently of the parent risultati screen which likely does the same via importi/faq — 2 to 3 GETs happen per session. Cache dedup at loadAppContent (in-memory promise) would prevent parallel refetches (minor perf)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration_7.py"
+  ],
+  "success_rate": {"backend": "100% (15/15 pytest)", "frontend": "100% (all 6 requested flows passed)"},
+  "seed_data_creation": "None — /api/content seed is idempotent and was already present in mongo app_content (`key='main'`). No user, report or payment records created this iteration.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Wizard is now 3 steps (Passo 1/2/3), NOT 4 — step 1 combines 'chi ha ricevuto la diagnosi' + 'quando è avvenuta'. To reach the 'quando' options on mobile viewport you MUST scroll the outer page (page.mouse.wheel(0, 300) x4) before clicking opt-when-*; scroll_into_view_if_needed alone is not enough because the Avanti button is fixed at bottom. After step 3 there is NO modal 'salva-tempo' anymore — clicking wizard-next-btn navigates directly to /risultati/{id}. VerbaleSection ('verbale-toggle'/'verbale-body') is rendered inside the results scroll — scroll several pages before clicking. All remote illustrations are served from https://salute-naviga.preview.emergentagent.com/api/assets/illustrations/{name}.jpg — DO NOT test with local file:// URIs, expo-router web preview uses remote URIs via EXPO_PUBLIC_BACKEND_URL. remoteContent uses a persistent cache keyed 'salutenav:remoteContent' in localStorage — clear it if you want to force a fresh /api/content GET.",
+  "rca_of_issue": "N/A — reported user bug ('illustrazioni non visibili in Expo Go: rettangoli azzurri') is fixed. Root cause was require()-based local assets not being served through the Expo tunnel. Fix applied: (a) 11 .jpg moved to /app/backend/static/illustrations, (b) server.py mounts app.mount('/api/assets', StaticFiles(...)), (c) src/lib/images.ts now returns {uri: `${EXPO_PUBLIC_BACKEND_URL}/api/assets/illustrations/${name}.jpg`}. Proxy-verified on web: all 11 URLs return 200 image/jpeg, and on the home the <img> for home_hero has naturalWidth=1000 (loaded successfully). Same fetch mechanism used by Expo Go native client — expected to resolve the empty rectangles."
+}

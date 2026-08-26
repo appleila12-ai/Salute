@@ -126,3 +126,22 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Aggiornati: home hero, 3 step wizard, banner diritti 104, entry-card patronati/territorio, hero pagine patronati e territorio, card territorio
 - Suggerimenti estetici del design agent salvati in /app/design_guidelines.json (font Plus Jakarta Sans 16pt, touch 48pt, topic colors solo come accenti) — NON ancora applicati, in attesa di conferma utente
 - Verificato con screenshot: home, wizard, risultati, territorio
+
+## Iterazione 12 (Giugno 2026) — Fix Expo Go + contenuti remoti + FAQ/Glossario/Importi/Verbale
+- FIX BUG utente ("rettangoli azzurri" su Expo Go): illustrazioni ora servite dal backend via /api/assets/illustrations/*.jpg (FastAPI StaticFiles, jpg copiati in /app/backend/static/illustrations); images.ts usa {uri} remoti → funziona anche su Expo Go
+- Contenuti AGGIORNABILI dal server: GET /api/content (seed idempotente in /app/backend/app_content.py, collezione app_content) — importi 2026, 10 FAQ, 12 glossario, 7 passi dopoVerbale; frontend con cache offline in src/lib/remoteContent.ts
+- NUOVE pagine: /importi (badge "Dati aggiornati al 01 giugno 2026" + link INPS per voce) e /faq (FAQ accordion + glossario)
+- NUOVA sezione risultati: "Verbale in mano: e ora?" (VerbaleSection, come attivare ogni beneficio: esenzione ASL, permessi HR, IVA 4%, bollo, AP70, collocamento, contrassegno)
+- Home: card "Domande Frequenti" + "Importi Aggiornati" sotto Contatti Utili
+- Logo: mark ripulito su FONDO BIANCO, in home ora Wordmark grande (logo accanto al nome) + tagline — il lockup grande è stato rimosso perché occupava troppo spazio
+- Per aggiornare gli importi: modificare il doc Mongo app_content key="main" (o il seed + cancellare il doc)
+- TESTING AGENT: 15/15 backend + tutti i flussi frontend PASSED (iteration_7.json) — bug immagini confermato chiuso
+
+## Iterazione 13 (Giugno 2026) — Sentinella AI dei contenuti
+- NUOVA "Sentinella AI": GPT-5 con web_search (Emergent LLM key, OpenAI Responses API via proxy) verifica gli importi INPS del DB contro le fonti ufficiali sul web
+- Backend /app/backend/sentinel.py: POST /api/sentinel/check (avvia check async in background, 1 chiamata LLM per importo in parallelo), GET /api/sentinel/latest (polling), POST /api/sentinel/resolve ({checkId, nome, azione: applica|ignora} — "applica" aggiorna il doc app_content e updatedAt)
+- Collezione Mongo: sentinel_checks {check_id, status running|done|errore, startedAt, finishedAt, results[]}
+- Ogni result: {nome, importoAttuale/redditoAttuale, importoTrovato/redditoTrovato, stato ok|discrepanza|non_verificato, nota, fonte URL, esito in_attesa|applicato|ignorato}
+- Frontend /app/frontend/app/sentinella.tsx: pagina admin nascosta — accesso con LONG PRESS (600ms) sul badge "Dati aggiornati al..." nella pagina /importi; bottone "Avvia controllo AI", polling 4s, card risultati con badge colorati, bottoni Applica/Ignora, link fonte
+- VERIFICATO E2E: check reale ha trovato discrepanza vera (accompagnamento 2026: € 551,53 da Messaggio INPS n. 628 vs € 552,27 in DB) → applicata → /api/content aggiornato
+- TODO memorizzato: Mini Pannello Admin (riproporre PRIMA della pubblicazione, richiesta esplicita utente)

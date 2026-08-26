@@ -434,7 +434,29 @@ async def assistant(payload: AssistantIn):
     return AssistantOut(answer=text)
 
 
+# ---------- Contenuti aggiornabili (importi, FAQ, glossario, dopo-verbale) ----------
+from app_content import APP_CONTENT_SEED
+
+
+@api_router.get("/content")
+async def get_app_content():
+    doc = await db.app_content.find_one({"key": "main"}, {"_id": 0})
+    if not doc:
+        await db.app_content.insert_one(dict(APP_CONTENT_SEED))
+        doc = {k: v for k, v in APP_CONTENT_SEED.items()}
+    return doc
+
+
+# ---------- Sentinella AI (verifica importi INPS sul web) ----------
+from sentinel import create_sentinel_router
+
 app.include_router(api_router)
+app.include_router(create_sentinel_router(db))
+
+# Static assets (illustrazioni servite al client, funziona anche su Expo Go)
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/api/assets", StaticFiles(directory=str(ROOT_DIR / "static")), name="assets")
 
 app.add_middleware(
     CORSMiddleware,

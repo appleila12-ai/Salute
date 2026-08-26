@@ -18,7 +18,7 @@ import { colors, radius, spacing } from "@/src/theme";
 import { storage } from "@/src/utils/storage";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useCloudSync } from "@/src/contexts/CloudSyncContext";
-import { Wordmark, BrandLockup } from "@/src/components/Brand";
+import { Wordmark } from "@/src/components/Brand";
 import { GuideStepsCard } from "@/src/components/NextStepsSection";
 import { formatDate, listReports, Report } from "@/src/lib/reports";
 import { IMAGES } from "@/src/lib/images";
@@ -197,9 +197,12 @@ export default function Home() {
           </Text>
         </ImageBackground>
 
-        {/* Branding — lockup ufficiale */}
+        {/* Branding — logo a lato del nome, pulito su fondo bianco */}
         <View style={styles.hero} testID="home-title">
-          <BrandLockup />
+          <Wordmark size="lg" />
+          <Text style={styles.tagline}>
+            La tua guida semplice ai diritti e alla Legge 104
+          </Text>
         </View>
 
         <View style={styles.descBox}>
@@ -281,6 +284,30 @@ export default function Home() {
             color={colors.borderStrong}
           />
         </Pressable>
+
+        {/* FAQ + Importi — sempre aggiornati */}
+        <View style={styles.quickRow}>
+          <Pressable
+            onPress={() => router.push("/faq")}
+            style={({ pressed }) => [styles.quickCard, pressed && { opacity: 0.9 }]}
+            accessibilityRole="button"
+            testID="home-faq-link"
+          >
+            <Ionicons name="help-circle" size={22} color={colors.brandPrimary} />
+            <Text style={styles.quickTitle}>Domande Frequenti</Text>
+            <Text style={styles.quickSub}>FAQ e glossario semplice</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push("/importi")}
+            style={({ pressed }) => [styles.quickCard, pressed && { opacity: 0.9 }]}
+            accessibilityRole="button"
+            testID="home-importi-link"
+          >
+            <Ionicons name="cash" size={22} color="#7C3AED" />
+            <Text style={styles.quickTitle}>Importi Aggiornati</Text>
+            <Text style={styles.quickSub}>Cifre e limiti di reddito</Text>
+          </Pressable>
+        </View>
 
         <View style={styles.spacer} />
 
@@ -618,8 +645,16 @@ const styles = StyleSheet.create({
   },
 
   hero: {
-    marginTop: spacing.md,
+    alignItems: "center",
+    marginTop: spacing.lg,
     marginBottom: spacing.xs,
+  },
+  tagline: {
+    marginTop: spacing.sm,
+    fontSize: 13,
+    color: colors.onSurfaceTertiary,
+    textAlign: "center",
+    lineHeight: 18,
   },
   heroImage: {
     height: 150,
@@ -766,6 +801,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.onSurfaceTertiary,
     marginTop: 1,
+  },
+  quickRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  quickCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: 4,
+    minHeight: 88,
+  },
+  quickTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.onSurface,
+    marginTop: 2,
+  },
+  quickSub: {
+    fontSize: 11,
+    color: colors.onSurfaceTertiary,
+    lineHeight: 15,
   },
 
   spacer: { flex: 1, minHeight: spacing.lg },

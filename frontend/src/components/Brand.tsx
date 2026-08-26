@@ -2,12 +2,11 @@
 // fornito dall'utente: assets/images/brand/mark.png + lockup.png.
 
 import React from "react";
-import { Image, ImageStyle, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { Image, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 import { colors } from "@/src/theme";
 
 const MARK = require("../../assets/images/brand/mark.png");
-const LOCKUP = require("../../assets/images/brand/lockup.png");
 
 interface LogoProps {
   size?: number;
@@ -15,9 +14,9 @@ interface LogoProps {
   variant?: "solid" | "soft";
 }
 
-/** Logo mark ufficiale (immagine). Le due varianti differiscono solo per il bordo. */
+/** Logo mark ufficiale su fondo bianco pulito. */
 export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
-  const borderRadius = size * 0.28;
+  const borderRadius = size * 0.24;
   return (
     <View
       style={[
@@ -26,16 +25,9 @@ export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
           height: size,
           borderRadius,
           overflow: "hidden",
-          backgroundColor: "#EEF1F6",
-          borderWidth: variant === "soft" ? 1.5 : 0,
-          borderColor: "rgba(42,117,211,0.18)",
-        },
-        variant === "solid" && {
-          shadowColor: colors.brandPrimaryDark,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.14,
-          shadowRadius: 10,
-          elevation: 3,
+          backgroundColor: "#FFFFFF",
+          borderWidth: variant === "soft" ? 1 : 0,
+          borderColor: colors.border,
         },
         style,
       ]}
@@ -47,18 +39,6 @@ export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
         accessibilityLabel="Logo TutelApp"
       />
     </View>
-  );
-}
-
-/** Lockup completo (logo + nome + payoff) — usato nella Home. */
-export function BrandLockup({ style }: { style?: ImageStyle }) {
-  return (
-    <Image
-      source={LOCKUP}
-      style={[styles.lockup, style]}
-      resizeMode="cover"
-      accessibilityLabel="TutelApp — La tua guida semplice ai diritti e alla Legge 104"
-    />
   );
 }
 
@@ -106,10 +86,5 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  lockup: {
-    width: "100%",
-    height: 158,
-    borderRadius: 16,
   },
 });

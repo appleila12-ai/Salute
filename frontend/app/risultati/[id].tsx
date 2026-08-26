@@ -28,6 +28,7 @@ import { AssistantCard } from "@/src/components/AssistantCard";
 import { RightsSectionCard } from "@/src/components/RightsSectionCard";
 import { AppealSection } from "@/src/components/AppealSection";
 import { ShareModal } from "@/src/components/ShareModal";
+import { VerbaleSection } from "@/src/components/VerbaleSection";
 import {
   buildReportHtml,
   getQrUrl,
@@ -183,6 +184,9 @@ export default function Risultati() {
           {report.sections.map((s) => (
             <RightsSectionCard key={s.id} section={s} />
           ))}
+
+          {/* Verbale in mano: come attivare i benefici */}
+          <VerbaleSection />
 
           {/* Dove inviare la pratica → pagina Patronati */}
           <Pressable
