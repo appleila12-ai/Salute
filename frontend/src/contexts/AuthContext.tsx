@@ -16,6 +16,7 @@ import {
   AUTH_TOKEN_KEY,
   AUTH_USER_KEY,
   AuthUser,
+  deleteAccountRemote,
   exchangeSessionId,
   extractSessionId,
   fetchMe,
@@ -32,6 +33,7 @@ interface AuthCtx {
   token: string | null;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   signingIn: boolean;
   error: string | null;
 }
@@ -258,9 +260,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token]);
 
+  const deleteAccount = useCallback(async () => {
+    const t = token;
+    if (t) {
+      // deve riuscire lato server prima di pulire lo stato locale
+      await deleteAccountRemote(t);
+    }
+    setUser(null);
+    setToken(null);
+    setStatus("unauthenticated");
+    await clearAuth();
+  }, [token]);
+
   const value = useMemo<AuthCtx>(
-    () => ({ status, user, token, signIn, signOut, signingIn, error }),
-    [status, user, token, signIn, signOut, signingIn, error],
+    () => ({ status, user, token, signIn, signOut, deleteAccount, signingIn, error }),
+    [status, user, token, signIn, signOut, deleteAccount, signingIn, error],
   );
 
   return (

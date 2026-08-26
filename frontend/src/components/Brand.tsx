@@ -1,12 +1,15 @@
-// TutelApp brand components — logo ufficiale (nodo triangolare teal)
-// fornito dall'utente: assets/images/brand/mark.png + lockup.png.
+// TutelApp brand components — logo ufficiale (scudo intrecciato teal)
+// servito dal backend come le illustrazioni (fix asset non caricati su
+// Expo Go/web): /api/assets/brand/mark.png.
 
 import React from "react";
 import { Image, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 import { colors } from "@/src/theme";
 
-const MARK = require("../../assets/images/brand/mark.png");
+const MARK = {
+  uri: `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/assets/brand/mark.png`,
+};
 
 interface LogoProps {
   size?: number;
@@ -35,7 +38,7 @@ export function Logo({ size = 64, style, variant = "solid" }: LogoProps) {
       <Image
         source={MARK}
         style={StyleSheet.absoluteFill}
-        resizeMode="cover"
+        resizeMode="contain"
         accessibilityLabel="Logo TutelApp"
       />
     </View>

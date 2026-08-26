@@ -66,6 +66,10 @@ export async function logoutRemote(token: string): Promise<void> {
   }
 }
 
+export async function deleteAccountRemote(token: string): Promise<void> {
+  await req<{ ok: boolean }>("/api/auth/account", { method: "DELETE" }, token);
+}
+
 export async function syncUpload(
   token: string,
   payload: Partial<CloudBundle>,

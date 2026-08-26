@@ -215,6 +215,17 @@ async def auth_logout(authorization: Optional[str] = Header(None)):
     return {"ok": True}
 
 
+@api_router.delete("/auth/account")
+async def delete_account(user: dict = Depends(get_current_user)):
+    """Cancellazione account in-app (richiesta Apple): rimuove utente,
+    sessioni e dati sincronizzati sul cloud."""
+    uid = user["user_id"]
+    await db.user_sessions.delete_many({"user_id": uid})
+    await db.user_data.delete_one({"user_id": uid})
+    await db.users.delete_one({"user_id": uid})
+    return {"ok": True}
+
+
 # ---------- Sync ----------
 @api_router.post("/sync/upload")
 async def sync_upload(payload: SyncPayload, user: dict = Depends(get_current_user)):

@@ -29,12 +29,15 @@ const COFFEE_URL = "https://www.buymeacoffee.com/salutenav";
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status, user, signIn, signOut, signingIn, error } = useAuth();
+  const { status, user, signIn, signOut, deleteAccount, signingIn, error } =
+    useAuth();
   const { state: syncState } = useCloudSync();
 
   const [regione, setRegione] = useState("Liguria");
   const [regionOpen, setRegionOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [history, setHistory] = useState<Report[]>([]);
 
   useEffect(() => {
@@ -207,7 +210,7 @@ export default function Home() {
 
         <View style={styles.descBox}>
           <Text style={styles.descText}>
-            Un percorso semplice in 4 passi per capire quali tutele, permessi
+            Un percorso guidato in 4 passi per capire quali tutele, permessi
             ed esenzioni ti spettano dopo una diagnosi.
           </Text>
         </View>
@@ -295,7 +298,7 @@ export default function Home() {
           >
             <Ionicons name="help-circle" size={22} color={colors.brandPrimary} />
             <Text style={styles.quickTitle}>Domande Frequenti</Text>
-            <Text style={styles.quickSub}>FAQ e glossario semplice</Text>
+            <Text style={styles.quickSub}>Risposte chiare e glossario</Text>
           </Pressable>
           <Pressable
             onPress={() => router.push("/importi")}
@@ -494,6 +497,7 @@ export default function Home() {
             <Pressable
               onPress={async () => {
                 setUserMenuOpen(false);
+                setConfirmDelete(false);
                 await signOut();
               }}
               style={({ pressed }) => [
@@ -505,6 +509,63 @@ export default function Home() {
               <Ionicons name="log-out-outline" size={18} color="#B91C1C" />
               <Text style={styles.logoutText}>Esci</Text>
             </Pressable>
+            {isAuth &&
+              (confirmDelete ? (
+                <View style={styles.deleteConfirmBox} testID="home-delete-confirm">
+                  <Text style={styles.deleteConfirmText}>
+                    {"Eliminare definitivamente l'account? Verranno cancellati anche i dati sincronizzati sul cloud. L'azione non è reversibile."}
+                  </Text>
+                  <View style={styles.deleteRow}>
+                    <Pressable
+                      onPress={() => setConfirmDelete(false)}
+                      style={styles.deleteCancelBtn}
+                      testID="home-delete-cancel-btn"
+                    >
+                      <Text style={styles.deleteCancelText}>Annulla</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={async () => {
+                        if (deleting) return;
+                        setDeleting(true);
+                        try {
+                          await deleteAccount();
+                          setUserMenuOpen(false);
+                          setConfirmDelete(false);
+                        } catch {
+                          /* errore di rete: l'utente può riprovare */
+                        }
+                        setDeleting(false);
+                      }}
+                      style={[styles.deleteConfirmBtn, deleting && { opacity: 0.6 }]}
+                      testID="home-delete-confirm-btn"
+                    >
+                      {deleting ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.deleteConfirmBtnText}>
+                          Elimina definitivamente
+                        </Text>
+                      )}
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={() => setConfirmDelete(true)}
+                  style={({ pressed }) => [
+                    styles.deleteAccountBtn,
+                    pressed && { opacity: 0.75 },
+                  ]}
+                  testID="home-delete-account-btn"
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={16}
+                    color={colors.onSurfaceTertiary}
+                  />
+                  <Text style={styles.deleteAccountText}>Elimina account</Text>
+                </Pressable>
+              ))}
           </Pressable>
         </Pressable>
       </Modal>
@@ -1011,5 +1072,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     color: "#B91C1C",
+  },
+  deleteAccountBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    marginTop: spacing.xs,
+    minHeight: 44,
+  },
+  deleteAccountText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.onSurfaceTertiary,
+    textDecorationLine: "underline",
+  },
+  deleteConfirmBox: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.errorSoft,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  deleteConfirmText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#7F1D1D",
+    fontWeight: "600",
+  },
+  deleteRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  deleteCancelBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  deleteCancelText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.onSurfaceSecondary,
+  },
+  deleteConfirmBtn: {
+    flex: 1.4,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+    borderRadius: radius.pill,
+    backgroundColor: colors.error,
+    paddingHorizontal: spacing.sm,
+  },
+  deleteConfirmBtnText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#FFFFFF",
   },
 });

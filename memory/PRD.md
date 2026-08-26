@@ -153,3 +153,17 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - NOTA UTENTE: il pagamento potrà essere reintrodotto "in un secondo momento" — richiesta esplicita
 - Verificato E2E con screenshot: wizard completo → risultati → card cassaforte senza bottone Stripe, upload disponibile
 - Ribadito dall'utente: MAI fare deploy senza autorizzazione esplicita
+
+## Iterazione 15 (Giugno 2026) — Fix logo scudo + refusi + prontezza deploy
+- FIX "logo ha perso lo scudo": il mark locale (require) non veniva caricato (riquadro bianco header, sagoma tagliata al centro) — ora servito dal BACKEND come le illustrazioni: /api/assets/brand/mark.png (copiato in /app/backend/static/brand/), Brand.tsx usa {uri} + resizeMode contain; mark.png ri-estratto dal lockup preservando la sagoma a scudo
+- FIX refusi "semplice" ripetuto in home: "Un percorso guidato in 4 passi…" e "Risposte chiare e glossario" (la tagline ufficiale con "semplice" resta: è il payoff del lockup)
+- DEPLOY READINESS (deployment_agent): 2 BLOCKER RISOLTI — httpx==0.28.1 aggiunto a requirements.txt; rimosse le righe .env/.env.*/*.env dal .gitignore root. Ora status=warn
+- WARN residui prima della pubblicazione: 1) prenotazione slot patronati è MOCK (PatronatiSection.tsx:385) — da rimuovere/rietichettare o integrare davvero; 2) manca cancellazione account in-app (richiesta Apple per store, esiste solo logout); 3) URL Emergent hardcoded (auth+LLM proxy) = costanti di piattaforma, non bloccanti
+- PENDING: riproporre Mini Pannello Admin PRIMA della pubblicazione (promessa all'utente)
+
+## Iterazione 16 (Giugno 2026) — Pre-pubblicazione: scelte utente applicate
+- Utente ha deciso: pubblicare SENZA Mini Pannello Admin (resta in backlog)
+- RIMOSSO il bottone "Prenota Slot" (mock) dai patronati: eliminati modal slot, stati booking e stili relativi da PatronatiSection.tsx — restano Chiama/Email/Mappa reali
+- CANCELLAZIONE ACCOUNT in-app (requisito Apple): DELETE /api/auth/account (auth bearer, cancella users+user_sessions+user_data), deleteAccountRemote in auth.ts, deleteAccount in AuthContext, UI nel menu utente della home sotto "Esci" (bottone "Elimina account" → conferma inline rossa "Elimina definitivamente"/"Annulla", testID home-delete-account-btn / home-delete-confirm-btn / home-delete-cancel-btn) — backend verificato E2E (200, dati rimossi, token invalidato 401)
+- LOGO SCUDO: rimossa l'ombra dal mark, sfondo bianco puro (filtro saturazione PIL), aggiornato sia frontend asset sia /app/backend/static/brand/mark.png
+- Verificato con screenshot: home (scudo pulito), /patronati (0 bottoni Prenota Slot, contatti presenti)
