@@ -127,4 +127,68 @@ APP_CONTENT_SEED = {
             },
         ],
     },
+    "livelliSostegno": {
+        "intro": "Con la Riforma 2027 l'esito della visita non è più solo una percentuale: indica il livello di sostegno di cui hai bisogno nella vita quotidiana. Tocca un livello per vedere le agevolazioni collegate.",
+        "livelli": [
+            {
+                "nome": "Sostegno Lieve",
+                "colore": "#1E7E34",
+                "descrizione": "Difficoltà contenute nella vita quotidiana: sostegni mirati e agevolazioni di base.",
+                "fisco": [
+                    "Detrazione 19% delle spese sanitarie e di assistenza specifica",
+                    "IVA 4% su ausili e sussidi tecnici/informatici collegati alla condizione",
+                ],
+                "lavoro": [
+                    "Priorità nella scelta della sede di lavoro più vicina, ove possibile",
+                    "Priorità di accesso allo smart working secondo i contratti",
+                ],
+            },
+            {
+                "nome": "Sostegno Medio",
+                "colore": "#B45309",
+                "descrizione": "Impatto significativo sulla vita quotidiana: più tutele economiche e sul lavoro.",
+                "fisco": [
+                    "Detrazione 19% spese sanitarie + deduzione spese di assistenza specifica",
+                    "IVA 4% su ausili, tecnologia e domotica assistiva",
+                    "IVA 4% sull'auto in caso di ridotte capacità motorie (con adattamento)",
+                ],
+                "lavoro": [
+                    "Permessi retribuiti secondo quanto indicato nel verbale",
+                    "Priorità di accesso allo smart working",
+                    "Nessun trasferimento di sede senza il tuo consenso",
+                ],
+            },
+            {
+                "nome": "Sostegno Grave (ex art. 3 c. 3)",
+                "colore": "#C2410C",
+                "descrizione": "Corrisponde all'attuale handicap grave: agevolazioni piene per te e per chi ti assiste.",
+                "fisco": [
+                    "IVA 4% sull'acquisto dell'auto anche senza adattamento (limiti di cilindrata)",
+                    "Esenzione totale del bollo auto e dell'imposta di trascrizione",
+                    "Deduzione integrale delle spese di assistenza specifica",
+                    "Detrazione per l'abbattimento delle barriere architettoniche",
+                ],
+                "lavoro": [
+                    "3 giorni di permesso retribuito al mese (anche per chi ti assiste)",
+                    "Congedo straordinario fino a 2 anni per il familiare convivente",
+                    "Diritto alla sede più vicina e divieto di trasferimento senza consenso",
+                ],
+            },
+            {
+                "nome": "Sostegno Gravissimo (non autosufficienza)",
+                "colore": "#B91C1C",
+                "descrizione": "Necessità di assistenza continua: massime tutele economiche e di cura.",
+                "fisco": [
+                    "Indennità di accompagnamento, senza limiti di reddito o età",
+                    "Tutte le agevolazioni auto del livello Grave",
+                    "Deduzioni per spese di assistenza e badanti",
+                    "Detrazioni per barriere architettoniche e domotica assistiva",
+                ],
+                "lavoro": [
+                    "Permessi e congedo straordinario potenziati per i caregiver",
+                    "Budget di cura coordinato nel Progetto di Vita con ASL e Comune",
+                ],
+            },
+        ],
+    },
 }

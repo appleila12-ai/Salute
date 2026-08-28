@@ -29,6 +29,7 @@ import { RightsSectionCard } from "@/src/components/RightsSectionCard";
 import { AppealSection } from "@/src/components/AppealSection";
 import { ShareModal } from "@/src/components/ShareModal";
 import { VerbaleSection } from "@/src/components/VerbaleSection";
+import { LivelliSection } from "@/src/components/LivelliSection";
 import {
   buildReportHtml,
   getQrUrl,
@@ -187,6 +188,8 @@ export default function Risultati() {
 
           {/* Verbale in mano: come attivare i benefici */}
           <VerbaleSection />
+
+          <LivelliSection />
 
           {/* Dove inviare la pratica → pagina Patronati */}
           <Pressable

@@ -185,3 +185,10 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Wizard step 3: nota blu "Riforma 2027" (testID wizard-riforma-note) → /riforma
 - Verificato E2E via screenshot: Genova→attiva 2ª fase, Napoli→dal 2027, La Spezia→attiva 3ª fase; banner home naviga; nota wizard visibile
 - PENDING RESIDUI: Buy Me a Coffee link (404), decisione web app, redeploy per portare tutto in produzione
+
+## Iterazione 19 (Giugno 2026) — Livelli di Sostegno nei risultati
+- app_content.py: nuovo blocco "livelliSostegno" (intro + 4 livelli: Lieve verde/Medio ambra/Grave arancio/Gravissimo rosso, ciascuno con descrizione, fisco[] e lavoro[]) — MIGRATO sul doc Mongo live
+- remoteContent.ts: tipi LivelloSostegno/LivelliSostegno, AppContent.livelliSostegno opzionale
+- NUOVO componente LivelliSection.tsx (accordion esterno stile VerbaleSection, accent #C2410C, accordion interno per livello con pallino colorato + liste agevolazioni + nota prudenziale + link a /riforma) — inserito in risultati/[id].tsx subito dopo VerbaleSection
+- Verificato E2E: wizard→risultati→sezione presente, livello Grave espanso mostra bollo/IVA 4%/congedo, link riforma ok
+- REDEPLOY: utente vuole portare in produzione (riforma 2027 + livelli + logo + cancellazione account) — azione UTENTE via Publish, ricordato

@@ -49,6 +49,19 @@ export interface Riforma {
   fasi: RiformaFase[];
 }
 
+export interface LivelloSostegno {
+  nome: string;
+  colore: string;
+  descrizione: string;
+  fisco: string[];
+  lavoro: string[];
+}
+
+export interface LivelliSostegno {
+  intro: string;
+  livelli: LivelloSostegno[];
+}
+
 export interface AppContent {
   updatedAt: string;
   fonte: string;
@@ -57,6 +70,7 @@ export interface AppContent {
   glossario: GlossaryItem[];
   dopoVerbale: VerbaleStep[];
   riforma?: Riforma;
+  livelliSostegno?: LivelliSostegno;
 }
 
 /** Scarica dal server; se offline usa la cache dell'ultima versione. */
