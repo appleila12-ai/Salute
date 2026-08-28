@@ -215,6 +215,29 @@ export default function Home() {
           </Text>
         </View>
 
+        {/* Novità Riforma 2027 */}
+        <Pressable
+          onPress={() => router.push("/riforma")}
+          style={({ pressed }) => [
+            styles.riformaBanner,
+            pressed && { opacity: 0.9 },
+          ]}
+          accessibilityRole="button"
+          testID="home-riforma-banner"
+        >
+          <View style={styles.riformaIcon}>
+            <Ionicons name="megaphone" size={20} color="#7C2D12" />
+          </View>
+          <View style={styles.flex}>
+            <Text style={styles.riformaTitle}>Novità · Riforma 2027</Text>
+            <Text style={styles.riformaSub}>
+              Dal 2027 cambia la procedura in tutta Italia. Verifica se nella
+              tua provincia è già attiva.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#7C2D12" />
+        </Pressable>
+
         {/* Region — ben visibile e modificabile */}
         <Pressable
           onPress={() => setRegionOpen(true)}
@@ -1133,5 +1156,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "800",
     color: "#FFFFFF",
+  },
+  riformaBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: "#FFF0E6",
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    minHeight: 64,
+  },
+  riformaIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  riformaTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#7C2D12",
+  },
+  riformaSub: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: "#9A3412",
+    marginTop: 2,
   },
 });

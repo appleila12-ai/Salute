@@ -29,6 +29,26 @@ export interface VerbaleStep {
   come: string;
 }
 
+export interface RiformaCambio {
+  titolo: string;
+  testo: string;
+}
+
+export interface RiformaFase {
+  dal: string;
+  etichetta: string;
+  province: string[];
+}
+
+export interface Riforma {
+  regimeNazionale: string;
+  fonteUrl: string;
+  intro: string;
+  cosaCambia: RiformaCambio[];
+  salvaguardia: string;
+  fasi: RiformaFase[];
+}
+
 export interface AppContent {
   updatedAt: string;
   fonte: string;
@@ -36,6 +56,7 @@ export interface AppContent {
   faq: FaqItem[];
   glossario: GlossaryItem[];
   dopoVerbale: VerbaleStep[];
+  riforma?: Riforma;
 }
 
 /** Scarica dal server; se offline usa la cache dell'ultima versione. */

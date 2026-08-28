@@ -271,6 +271,29 @@ export default function Wizard() {
                   {"verifica che il medico abbia spuntato SIA l'Invalidità Civile SIA la Legge 104 sul certificato, per non ripetere la procedura!"}
                 </Text>
               </View>
+
+              {/* Nota Riforma 2027 */}
+              <Pressable
+                onPress={() => router.push("/riforma")}
+                style={styles.riformaNote}
+                accessibilityRole="button"
+                testID="wizard-riforma-note"
+              >
+                <Ionicons
+                  name="information-circle"
+                  size={18}
+                  color={colors.brandPrimary}
+                />
+                <Text style={styles.riformaNoteText}>
+                  <Text style={styles.riformaNoteStrong}>Riforma 2027: </Text>
+                  {"in molte province il certificato del medico avvia da solo la pratica, senza domanda separata. Tocca per verificare la tua provincia."}
+                </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={colors.brandPrimary}
+                />
+              </Pressable>
             </View>
           )}
         </ScrollView>
@@ -541,6 +564,26 @@ const styles = StyleSheet.create({
     color: "#78350F",
   },
   certWarnStrong: {
+    fontWeight: "800",
+  },
+  riformaNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.brandSecondary,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    minHeight: 48,
+  },
+  riformaNoteText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.onBrandSecondary,
+    fontWeight: "600",
+  },
+  riformaNoteStrong: {
     fontWeight: "800",
   },
 });

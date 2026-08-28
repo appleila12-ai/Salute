@@ -80,6 +80,9 @@ APP_CONTENT_SEED = {
         {"d": "L'accompagnamento si perde se c'è un ricovero?", "r": "Viene sospesa solo per ricoveri gratuiti a carico dello Stato superiori a 29 giorni. Ricoveri brevi o a pagamento non la toccano."},
         {"d": "Quanto costa farsi seguire da un patronato?", "r": "Nulla: l'assistenza per queste pratiche è gratuita per legge, finanziata dallo Stato."},
         {"d": "La percentuale riconosciuta è più bassa del previsto: che faccio?", "r": "Puoi chiedere il riesame o fare ricorso al giudice (ATP) entro 6 mesi dal verbale. Nel frattempo raccogli referti aggiornati. Il patronato ti segue gratis."},
+        {"d": "Cos'è la Riforma della Disabilità 2027?", "r": "Dal 1° gennaio 2027 (D.Lgs. 62/2024) in tutta Italia: basta il certificato del medico per avviare la pratica, la visita è solo INPS e si valuta l'impatto sulla vita quotidiana, non solo la percentuale. In molte province è già attiva in via sperimentale."},
+        {"d": "Con la riforma perdo il mio verbale attuale?", "r": "No. I verbali già rilasciati restano validi a tempo indeterminato e non perdi nessuna agevolazione: la riforma vale solo per le nuove domande."},
+        {"d": "La mia provincia è nella sperimentazione: cosa cambia per me?", "r": "Il tuo medico invia il certificato introduttivo e la pratica parte da sola: niente più domanda amministrativa separata. Puoi anche chiedere il Progetto di Vita personalizzato."},
     ],
     "glossario": [
         {"t": "Verbale", "d": "Il documento finale della Commissione Medica: indica percentuale di invalidità e/o gravità dell'handicap."},
@@ -93,6 +96,35 @@ APP_CONTENT_SEED = {
         {"t": "Congedo straordinario", "d": "Fino a 2 anni retribuiti per assistere un familiare convivente con handicap grave."},
         {"t": "AP70", "d": "Il modello INPS con cui comunichi i dati di pagamento dopo l'accoglimento della domanda."},
         {"t": "ISEE", "d": "L'indicatore della situazione economica: serve per SAD comunale e altre agevolazioni (non per l'accompagnamento)."},
-        {"t": "Riforma disabilità (D.Lgs 62/2024)", "d": "La nuova procedura in sperimentazione: certificato unico e Progetto di Vita. Attiva solo in alcune province."},
+        {"t": "Riforma disabilità (D.Lgs 62/2024)", "d": "La nuova procedura: certificato unico, valutazione di base INPS e Progetto di Vita. Già attiva in molte province, in tutta Italia dal 1° gennaio 2027."},
     ],
+    "riforma": {
+        "regimeNazionale": "2027-01-01",
+        "fonteUrl": "https://www.inps.it/it/it/inps-comunica/dossier/riforma-della-disabilita/fase-sperimentale.html",
+        "intro": "Dal 1° gennaio 2027 la Riforma della Disabilità (D.Lgs. 62/2024) vale in tutta Italia. In molte province la nuova procedura è già attiva in via sperimentale: verifica la tua qui sotto.",
+        "cosaCambia": [
+            {"titolo": "Basta doppia domanda", "testo": "Il certificato medico introduttivo del tuo medico avvia DA SOLO la pratica: non serve più presentare la domanda amministrativa separata all'INPS."},
+            {"titolo": "INPS unico valutatore", "testo": "La visita è gestita solo dall'INPS (non più dalle commissioni ASL): un solo accertamento, chiamato Valutazione di Base."},
+            {"titolo": "Nuova valutazione (criteri OMS)", "testo": "Non si guarda solo la percentuale: si valuta quanto la condizione impatta la vita quotidiana (ICF-WHODAS). L'esito indica il livello di sostegno necessario, da lieve a molto elevato."},
+            {"titolo": "Progetto di Vita", "testo": "Puoi chiedere un piano personalizzato che coordina in un unico documento sostegni sanitari, sociali, scuola, lavoro e vita indipendente."},
+        ],
+        "salvaguardia": "Chi ha GIÀ un verbale (invalidità civile o Legge 104, incluso art. 3 comma 3) NON deve rifare nulla: i verbali già rilasciati restano validi a tempo indeterminato e le agevolazioni non si perdono. La riforma vale solo per le nuove domande.",
+        "fasi": [
+            {
+                "dal": "2025-01-01",
+                "etichetta": "1ª fase sperimentale (dal 1° gennaio 2025)",
+                "province": ["Brescia", "Catanzaro", "Firenze", "Forlì-Cesena", "Frosinone", "Perugia", "Salerno", "Sassari", "Trieste"],
+            },
+            {
+                "dal": "2025-09-30",
+                "etichetta": "2ª fase sperimentale (dal 30 settembre 2025)",
+                "province": ["Alessandria", "Genova", "Isernia", "Lecce", "Macerata", "Matera", "Palermo", "Teramo", "Vicenza", "Trento", "Aosta"],
+            },
+            {
+                "dal": "2026-03-01",
+                "etichetta": "3ª fase sperimentale (dal 1° marzo 2026)",
+                "province": ["Ancona", "Arezzo", "Ascoli Piceno", "Asti", "Bergamo", "Bologna", "Brindisi", "Cagliari", "Caltanissetta", "Campobasso", "Caserta", "Catania", "Chieti", "Como", "Cosenza", "Crotone", "Cuneo", "La Spezia", "Mantova", "Massa-Carrara", "Messina", "Milano", "Pavia", "Piacenza", "Pordenone", "Potenza", "Ravenna", "Reggio Calabria", "Rimini", "Roma", "Savona", "Sondrio", "Terni", "Torino", "Treviso", "Udine", "Venezia", "Verona", "Vibo Valentia"],
+            },
+        ],
+    },
 }

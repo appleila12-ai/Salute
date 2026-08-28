@@ -175,3 +175,13 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - Funzioni: bivio onboarding (Nuova Diagnosi 2027 / Salvaguardia 104), select 4 livelli sostegno con agevolazioni fiscali+lavoro dinamiche, sezione salvaguardia + Progetto di Vita, upload simulato referti con OTP 6 cifre e timer 10 min, dashboard admin (sblocco fascicolo con OTP, referti cronologici, barre ICF OMS, export SISDA simulato), patronati ordinati per km con nota canone manutenzione
 - Testato E2E via screenshot: tutti i flussi OK (OTP generato → fascicolo sbloccato → SISDA)
 - PENDING APERTI: 1) app mobile da aggiornare per la riforma 2027 (province in sperimentazione — utente dice che i contenuti attuali "non sono corretti" per quelle province); 2) decisione web app slot replacement (utente informato dei costi, non ha ancora dato ok definitivo); 3) link Buy Me a Coffee reale da ricevere dall'utente (attuale = 404)
+
+## Iterazione 18 (Giugno 2026) — App mobile aggiornata all'iter 2027 (FATTO)
+- RISOLTO pending #1: app aggiornata alla Riforma D.Lgs. 62/2024
+- Backend app_content.py: nuovo blocco "riforma" nel seed (regimeNazionale 2027-01-01, intro, 4 card cosaCambia, salvaguardia, 3 fasi con 59 territori verificati da fonti INPS: 9 dal 1/1/2025, 11 dal 30/9/2025, 39 dal 1/3/2026) + 3 nuove FAQ riforma + glossario aggiornato; MIGRAZIONE eseguita sul doc Mongo live ($set riforma/faq/glossario)
+- remoteContent.ts: tipi Riforma/RiformaFase/RiformaCambio, AppContent.riforma opzionale
+- NUOVA pagina /riforma (riforma.tsx): verifica provincia con ricerca normalizzata (match: già attiva con fase/data, oppure "dal 1/1/2027"), sezioni Cosa Cambia, banner Salvaguardia verde, link fonte INPS — tutto da contenuto remoto (aggiornabile senza update app)
+- Home: banner arancione "Novità · Riforma 2027" (testID home-riforma-banner) → /riforma
+- Wizard step 3: nota blu "Riforma 2027" (testID wizard-riforma-note) → /riforma
+- Verificato E2E via screenshot: Genova→attiva 2ª fase, Napoli→dal 2027, La Spezia→attiva 3ª fase; banner home naviga; nota wizard visibile
+- PENDING RESIDUI: Buy Me a Coffee link (404), decisione web app, redeploy per portare tutto in produzione
