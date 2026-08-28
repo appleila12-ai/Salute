@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,6 +7,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +27,11 @@ import {
   WorkOption,
 } from "@/src/lib/reports";
 import { PARTNER_NOTE } from "@/src/lib/content";
+import {
+  loadAppContent,
+  RiformaFase,
+  trovaProvincia,
+} from "@/src/lib/remoteContent";
 
 const WHO_OPTIONS: WhoOption[] = ["Io stesso", "Un genitore", "Un figlio", "Coniuge/Partner"];
 const WHEN_OPTIONS: WhenOption[] = [
@@ -53,6 +59,28 @@ export default function Wizard() {
   const [work, setWork] = useState<WorkOption | null>(null);
   const [cert, setCert] = useState<CertOption | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Riforma 2027: verifica provincia (facoltativa) nello step 3
+  const [fasi, setFasi] = useState<RiformaFase[]>([]);
+  const [provQuery, setProvQuery] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const c = await loadAppContent();
+      if (c?.riforma) setFasi(c.riforma.fasi);
+    })();
+  }, []);
+
+  const provMatch = useMemo(
+    () => trovaProvincia(fasi, provQuery),
+    [fasi, provQuery],
+  );
+  const provEsito: "si" | "no" | null =
+    fasi.length > 0 && provQuery.trim().length >= 3
+      ? provMatch
+        ? "si"
+        : "no"
+      : null;
 
   const canProceed = useMemo(() => {
     if (step === 1) return !!who && !!when;
@@ -84,6 +112,10 @@ export default function Wizard() {
       when,
       work,
       cert,
+      ...(provEsito !== null && {
+        provincia: provMatch ? provMatch.provincia : provQuery.trim(),
+        nuovoIter: !!provMatch,
+      }),
     };
     const report: Report = await saveReport(answers);
     setSaving(false);
@@ -270,6 +302,63 @@ export default function Wizard() {
                   <Text style={styles.certWarnStrong}>Salva-tempo: </Text>
                   {"verifica che il medico abbia spuntato SIA l'Invalidità Civile SIA la Legge 104 sul certificato, per non ripetere la procedura!"}
                 </Text>
+              </View>
+
+              {/* Verifica provincia — iter 2027 */}
+              <View style={styles.provCard} testID="wizard-prov-card">
+                <Text style={styles.provTitle}>
+                  In quale provincia presenterete la domanda? (facoltativo)
+                </Text>
+                <View style={styles.provInputRow}>
+                  <Ionicons
+                    name="location-outline"
+                    size={18}
+                    color={colors.muted}
+                  />
+                  <TextInput
+                    style={styles.provInput}
+                    placeholder="Es. Genova"
+                    placeholderTextColor={colors.muted}
+                    value={provQuery}
+                    onChangeText={setProvQuery}
+                    autoCorrect={false}
+                    testID="wizard-prov-input"
+                  />
+                </View>
+                {provEsito === "si" && (
+                  <View
+                    style={[styles.provEsito, { backgroundColor: colors.successSoft }]}
+                    testID="wizard-prov-si"
+                  >
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={18}
+                      color={colors.success}
+                    />
+                    <Text style={[styles.provEsitoText, { color: colors.success }]}>
+                      <Text style={styles.provBold}>
+                        {provMatch!.provincia}: nuovo iter 2027 già attivo.{" "}
+                      </Text>
+                      {"Basta il certificato del medico: la pratica parte da sola, senza domanda separata all'INPS. I risultati terranno conto di questo."}
+                    </Text>
+                  </View>
+                )}
+                {provEsito === "no" && (
+                  <View
+                    style={[styles.provEsito, { backgroundColor: colors.brandSecondary }]}
+                    testID="wizard-prov-no"
+                  >
+                    <Ionicons name="time" size={18} color={colors.onBrandSecondary} />
+                    <Text
+                      style={[styles.provEsitoText, { color: colors.onBrandSecondary }]}
+                    >
+                      <Text style={styles.provBold}>
+                        Procedura attuale fino al 31/12/2026.{" "}
+                      </Text>
+                      {"Nella tua provincia servono ancora certificato + domanda INPS. Il nuovo iter arriva il 1° gennaio 2027."}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               {/* Nota Riforma 2027 */}
@@ -584,6 +673,52 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   riformaNoteStrong: {
+    fontWeight: "800",
+  },
+  provCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  provTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.onSurface,
+    marginBottom: spacing.sm,
+  },
+  provInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    minHeight: 46,
+  },
+  provInput: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.onSurface,
+    paddingVertical: spacing.sm,
+  },
+  provEsito: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  provEsitoText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+  provBold: {
     fontWeight: "800",
   },
 });

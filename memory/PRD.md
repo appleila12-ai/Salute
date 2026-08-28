@@ -192,3 +192,16 @@ Flusso lineare a 3 passi (IT) per capire i diritti dopo una diagnosi (Legge 104 
 - NUOVO componente LivelliSection.tsx (accordion esterno stile VerbaleSection, accent #C2410C, accordion interno per livello con pallino colorato + liste agevolazioni + nota prudenziale + link a /riforma) — inserito in risultati/[id].tsx subito dopo VerbaleSection
 - Verificato E2E: wizard→risultati→sezione presente, livello Grave espanso mostra bollo/IVA 4%/congedo, link riforma ok
 - REDEPLOY: utente vuole portare in produzione (riforma 2027 + livelli + logo + cancellazione account) — azione UTENTE via Publish, ricordato
+
+## Iterazione 20 (Giugno 2026) — Wizard 2027 + Sentinella Riforma
+- WIZARD 2027: reports.ts Answers + provincia?/nuovoIter?; remoteContent.ts esporta normalizzaTesto/trovaProvincia (riusati anche in riforma.tsx); valutazione.tsx step 3 ha card "In quale provincia presenterete la domanda? (facoltativo)" (testID wizard-prov-input) con esito verde (nuovo iter attivo) o blu (dal 2027); risposta salvata nel report
+- RISULTATI: NextStepsSection accetta provincia/nuovoIter e mostra banner verde "Iter semplificato 2027 attivo a X" (testID iter-2027-banner) — salta domanda amministrativa
+- SENTINELLA RIFORMA: sentinel.py _check_riforma (web_search su elenco province+data regime, tipo:"riforma", niente auto-apply: solo bottone "Ho preso nota" → esito ignorato/"presa in carico"); i result importi hanno ora tipo:"importo"
+- SUCCESSO REALE: primo check ha trovato che mancava BOLZANO nella 3ª fase → aggiunto a seed+DB (ora 60 territori, allineati a INPS)
+- Verificato E2E: wizard (Genova verde, Napoli blu, La Spezia→banner nei risultati), sentinella card riforma con presa in carico
+
+## Iterazione 21 (Giugno 2026) — Bottone caffè → Stripe Payment Link reale
+- Utente ha fornito chiavi Stripe LIVE proprie (pk/sk in chat) — usate UNA TANTUM via API per creare: prodotto "Offrici un caffè ☕ · TutelApp", prezzo a importo libero (preset €3, min €1, max €50), payment link https://buy.stripe.com/fZu00k5s759GgXs3hP3gk00
+- COFFEE_URL in index.tsx aggiornato (prima era buymeacoffee 404) — link verificato HTTP 200
+- La sk_live NON è salvata in codice/.env; consigliato all'utente di ruotarla per sicurezza (condivisa in chat)
+- NOTA: la Cassaforte resta gratuita (Stripe Emergent test dormiente, indipendente da questo link)

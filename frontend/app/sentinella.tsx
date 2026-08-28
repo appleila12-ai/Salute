@@ -27,6 +27,7 @@ type Esito = "in_attesa" | "applicato" | "ignorato" | null;
 
 interface SentinelResult {
   nome: string;
+  tipo?: "importo" | "riforma";
   importoAttuale: string;
   redditoAttuale: string;
   stato: Stato;
@@ -197,7 +198,7 @@ export default function Sentinella() {
               <Ionicons name="eye" size={20} color={colors.brandPrimary} />
             </View>
             <Text style={styles.introText}>
-              {"Area riservata al gestore dell'app. L'AI cerca sul web le fonti ufficiali (INPS) e confronta gli importi con quelli mostrati agli utenti. Tu decidi cosa applicare."}
+              {"Area riservata al gestore dell'app. L'AI cerca sul web le fonti ufficiali (INPS) e confronta importi e province in sperimentazione con quelli mostrati agli utenti. Tu decidi cosa applicare."}
             </Text>
           </View>
 
@@ -313,7 +314,24 @@ export default function Sentinella() {
                     </Pressable>
                   )}
 
-                  {pending && (
+                  {pending &&
+                    (r.tipo === "riforma" ? (
+                      <View style={styles.actionsRow}>
+                        <Pressable
+                          onPress={() => resolve(r.nome, "ignora")}
+                          disabled={resolving === r.nome}
+                          style={[styles.applyBtn, resolving === r.nome && styles.btnDisabled]}
+                          testID="sentinella-riforma-ack"
+                        >
+                          {resolving === r.nome ? (
+                            <ActivityIndicator size="small" color={colors.onBrandPrimary} />
+                          ) : (
+                            <Ionicons name="checkmark" size={16} color={colors.onBrandPrimary} />
+                          )}
+                          <Text style={styles.applyText}>Ho preso nota</Text>
+                        </Pressable>
+                      </View>
+                    ) : (
                     <View style={styles.actionsRow}>
                       <Pressable
                         onPress={() => resolve(r.nome, "applica")}
@@ -337,7 +355,7 @@ export default function Sentinella() {
                         <Text style={styles.ignoreText}>Ignora</Text>
                       </Pressable>
                     </View>
-                  )}
+                  ))}
 
                   {r.esito === "applicato" && (
                     <View style={styles.appliedRow}>
@@ -351,7 +369,9 @@ export default function Sentinella() {
                     <View style={styles.appliedRow}>
                       <Ionicons name="remove-circle" size={15} color={colors.muted} />
                       <Text style={[styles.appliedText, { color: colors.muted }]}>
-                        Segnalazione ignorata.
+                        {r.tipo === "riforma"
+                          ? "Segnalazione presa in carico."
+                          : "Segnalazione ignorata."}
                       </Text>
                     </View>
                   )}

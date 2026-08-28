@@ -165,7 +165,13 @@ export default function Risultati() {
           <DeadlineCard cert={a.cert} />
 
           {/* Percorso passo-passo + certificato + possibilità 104/invalidità */}
-          <NextStepsSection work={a.work} cert={a.cert} who={a.who} />
+          <NextStepsSection
+            work={a.work}
+            cert={a.cert}
+            who={a.who}
+            provincia={a.provincia}
+            nuovoIter={a.nuovoIter}
+          />
 
           {/* Banner: Diritti e Permessi 104 */}
           <ImageBackground

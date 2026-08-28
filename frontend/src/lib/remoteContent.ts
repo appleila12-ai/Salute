@@ -105,3 +105,28 @@ export function formatUpdatedAt(iso: string): string {
     year: "numeric",
   });
 }
+
+/** Normalizza un nome provincia per il confronto (accenti, trattini, spazi). */
+export function normalizzaTesto(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[-'\s]/g, "");
+}
+
+/** Cerca la provincia tra le fasi della sperimentazione (match esatto o prefisso). */
+export function trovaProvincia(
+  fasi: RiformaFase[],
+  query: string,
+): { fase: RiformaFase; provincia: string } | null {
+  const q = normalizzaTesto(query);
+  if (q.length < 3) return null;
+  for (const fase of fasi) {
+    for (const p of fase.province) {
+      const np = normalizzaTesto(p);
+      if (np === q || np.startsWith(q)) return { fase, provincia: p };
+    }
+  }
+  return null;
+}

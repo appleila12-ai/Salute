@@ -24,7 +24,7 @@ import { formatDate, listReports, Report } from "@/src/lib/reports";
 import { IMAGES } from "@/src/lib/images";
 import { REGIONE_KEY, REGIONI } from "@/src/lib/territorio";
 
-const COFFEE_URL = "https://www.buymeacoffee.com/salutenav";
+const COFFEE_URL = "https://buy.stripe.com/fZu00k5s759GgXs3hP3gk00"; // Stripe Payment Link (donazione, importo libero)
 
 export default function Home() {
   const router = useRouter();

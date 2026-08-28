@@ -23,15 +23,8 @@ import {
   formatUpdatedAt,
   loadAppContent,
   RiformaFase,
+  trovaProvincia,
 } from "@/src/lib/remoteContent";
-
-function normalizza(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[-'\s]/g, "");
-}
 
 const CAMBIO_ICONE = ["document-text", "business", "analytics", "sparkles"] as const;
 
@@ -52,15 +45,8 @@ export default function RiformaScreen() {
   const riforma = content?.riforma;
 
   const esito = useMemo((): { fase: RiformaFase; provincia: string } | "no" | null => {
-    const q = normalizza(query);
-    if (!riforma || q.length < 3) return null;
-    for (const fase of riforma.fasi) {
-      for (const p of fase.province) {
-        const np = normalizza(p);
-        if (np === q || np.startsWith(q)) return { fase, provincia: p };
-      }
-    }
-    return "no";
+    if (!riforma || query.trim().length < 3) return null;
+    return trovaProvincia(riforma.fasi, query) ?? "no";
   }, [query, riforma]);
 
   return (

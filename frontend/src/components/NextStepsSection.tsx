@@ -19,6 +19,8 @@ interface Props {
   work: WorkOption;
   cert: CertOption;
   who: WhoOption;
+  provincia?: string;
+  nuovoIter?: boolean;
 }
 
 /** Card "Il Percorso" — 5 passi dall'avere la diagnosi ai benefici.
@@ -69,7 +71,7 @@ export function GuideStepsCard() {
   );
 }
 
-export function NextStepsSection({ work, cert, who }: Props) {
+export function NextStepsSection({ work, cert, who, provincia, nuovoIter }: Props) {
   const isUnemployed = work === "Inoccupato/Pensionato";
   const [certOpen, setCertOpen] = useState(cert === "Non so cos'è");
 
@@ -80,6 +82,21 @@ export function NextStepsSection({ work, cert, who }: Props) {
 
   return (
     <View testID="next-steps-section">
+      {/* Iter semplificato 2027 (provincia in sperimentazione) */}
+      {nuovoIter && (
+        <View style={styles.iterBanner} testID="iter-2027-banner">
+          <Ionicons name="flash" size={18} color={colors.success} />
+          <Text style={styles.iterBannerText}>
+            <Text style={styles.iterBold}>
+              Iter semplificato 2027 attivo{provincia ? ` a ${provincia}` : ""}:{" "}
+            </Text>
+            la pratica parte con il solo certificato del medico — potete
+            saltare la domanda amministrativa separata. Gli altri passi
+            restano uguali.
+          </Text>
+        </View>
+      )}
+
       {/* Certificato introduttivo — spiegazione */}
       <View
         style={[styles.card, { borderLeftColor: topics.documenti.main }]}
@@ -219,6 +236,25 @@ export function NextStepsSection({ work, cert, who }: Props) {
 }
 
 const styles = StyleSheet.create({
+  iterBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    backgroundColor: colors.successSoft,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  iterBannerText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.success,
+    fontWeight: "600",
+  },
+  iterBold: {
+    fontWeight: "800",
+  },
   flex: { flex: 1 },
   card: {
     backgroundColor: colors.surface,

@@ -62,6 +62,7 @@ def _item_prompt(anno: int, item: dict) -> str:
 async def _check_item(client: AsyncOpenAI, anno: int, item: dict) -> dict:
     base = {
         "nome": item["nome"],
+        "tipo": "importo",
         "importoAttuale": item["importo"],
         "redditoAttuale": item["reddito"],
         "importoTrovato": None,
@@ -97,6 +98,69 @@ async def _check_item(client: AsyncOpenAI, anno: int, item: dict) -> dict:
     return base
 
 
+def _riforma_prompt(anno: int, riforma: dict) -> str:
+    fasi_txt = "\n".join(
+        f"- {f['etichetta']}: {', '.join(f['province'])}" for f in riforma.get("fasi", [])
+    )
+    return (
+        f'Sei la "Sentinella AI" di TutelApp. Verifica sul web lo stato {anno} della '
+        "sperimentazione della Riforma della Disabilità (D.Lgs. 62/2024).\n\n"
+        "Dati attualmente mostrati nell'app:\n"
+        f"- Entrata a regime nazionale: {riforma.get('regimeNazionale')}\n"
+        f"- Fasi e province in sperimentazione:\n{fasi_txt}\n\n"
+        "Cerca su fonti ufficiali (inps.it, disabilita.governo.it, gazzettaufficiale.it): "
+        "l'elenco delle province è cambiato? Sono state annunciate nuove fasi, nuove "
+        "province o proroghe/anticipi della data di entrata a regime?\n\n"
+        "Rispondi SOLO con un oggetto JSON valido:\n"
+        "{\n"
+        '  "stato": "ok" | "discrepanza" | "non_verificato",\n'
+        '  "nota": "max 3 frasi in italiano: cosa è cambiato (elenca le differenze principali) oppure conferma che è tutto allineato",\n'
+        '  "fonte": "URL della fonte più autorevole" oppure null\n'
+        "}\n\n"
+        'Regole: "ok" se elenco province e data di regime coincidono; "discrepanza" se '
+        "ci sono province mancanti/in più, nuove fasi o date diverse; "
+        f'"non_verificato" se non trovi fonti affidabili per il {anno}. Non inventare.'
+    )
+
+
+async def _check_riforma(client: AsyncOpenAI, anno: int, riforma: dict) -> dict:
+    tot = sum(len(f.get("province", [])) for f in riforma.get("fasi", []))
+    base = {
+        "nome": "Riforma 2027 · province in sperimentazione",
+        "tipo": "riforma",
+        "importoAttuale": f"{tot} territori in {len(riforma.get('fasi', []))} fasi · regime dal {riforma.get('regimeNazionale')}",
+        "redditoAttuale": "",
+        "importoTrovato": None,
+        "redditoTrovato": None,
+        "nota": "",
+        "fonte": None,
+        "esito": None,
+    }
+    try:
+        resp = await client.responses.create(
+            model="gpt-5",
+            input=_riforma_prompt(anno, riforma),
+            tools=[{"type": "web_search"}],
+        )
+        data = _parse_json(resp.output_text or "")
+        stato = data.get("stato")
+        if stato not in ("ok", "discrepanza", "non_verificato"):
+            stato = "non_verificato"
+        base.update(
+            stato=stato,
+            nota=str(data.get("nota") or "").strip(),
+            fonte=data.get("fonte") or None,
+            esito="in_attesa" if stato == "discrepanza" else None,
+        )
+    except Exception as e:
+        logger.exception("sentinel riforma check failed")
+        base.update(
+            stato="non_verificato",
+            nota=f"Verifica non riuscita: {type(e).__name__}. Riprova più tardi.",
+        )
+    return base
+
+
 def create_sentinel_router(db) -> APIRouter:
     router = APIRouter(prefix="/api/sentinel")
 
@@ -117,7 +181,12 @@ def create_sentinel_router(db) -> APIRouter:
                 timeout=180.0,
             )
             results = await asyncio.gather(
-                *[_check_item(client, anno, it) for it in content.get("importi", [])]
+                *[_check_item(client, anno, it) for it in content.get("importi", [])],
+                *(
+                    [_check_riforma(client, anno, content["riforma"])]
+                    if content.get("riforma")
+                    else []
+                ),
             )
             await db.sentinel_checks.update_one(
                 {"check_id": check_id},

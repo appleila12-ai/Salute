@@ -19,6 +19,8 @@ export interface Answers {
   diagnosisDate?: string; // legacy field — no longer displayed (era una data fittizia)
   work: WorkOption;
   cert: CertOption;
+  provincia?: string; // provincia indicata nel wizard (facoltativa)
+  nuovoIter?: boolean; // true se la provincia è già nella sperimentazione 2027
 }
 
 export interface RightSection {

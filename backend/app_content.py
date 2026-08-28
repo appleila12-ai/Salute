@@ -123,7 +123,7 @@ APP_CONTENT_SEED = {
             {
                 "dal": "2026-03-01",
                 "etichetta": "3ª fase sperimentale (dal 1° marzo 2026)",
-                "province": ["Ancona", "Arezzo", "Ascoli Piceno", "Asti", "Bergamo", "Bologna", "Brindisi", "Cagliari", "Caltanissetta", "Campobasso", "Caserta", "Catania", "Chieti", "Como", "Cosenza", "Crotone", "Cuneo", "La Spezia", "Mantova", "Massa-Carrara", "Messina", "Milano", "Pavia", "Piacenza", "Pordenone", "Potenza", "Ravenna", "Reggio Calabria", "Rimini", "Roma", "Savona", "Sondrio", "Terni", "Torino", "Treviso", "Udine", "Venezia", "Verona", "Vibo Valentia"],
+                "province": ["Ancona", "Arezzo", "Ascoli Piceno", "Asti", "Bergamo", "Bologna", "Bolzano", "Brindisi", "Cagliari", "Caltanissetta", "Campobasso", "Caserta", "Catania", "Chieti", "Como", "Cosenza", "Crotone", "Cuneo", "La Spezia", "Mantova", "Massa-Carrara", "Messina", "Milano", "Pavia", "Piacenza", "Pordenone", "Potenza", "Ravenna", "Reggio Calabria", "Rimini", "Roma", "Savona", "Sondrio", "Terni", "Torino", "Treviso", "Udine", "Venezia", "Verona", "Vibo Valentia"],
             },
         ],
     },
