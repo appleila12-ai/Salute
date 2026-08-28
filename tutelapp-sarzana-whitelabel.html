@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TutelAPP · Portale Disabilità 2027</title>
+<style>
+  /* ============ VARIABILI ISTITUZIONALI (brand dell'Ente) ============ */
+  :root{
+    --ente-primario:#0B4F8A;        /* blu istituzionale */
+    --ente-primario-scuro:#083A66;
+    --ente-accento:#E8590C;         /* arancio azione */
+    --ente-accento-soft:#FFF0E6;
+    --ente-oro:#B7791F;
+    --ok:#1E7E34; --ok-soft:#E6F4EA;
+    --warn:#B45309; --warn-soft:#FEF3C7;
+    --err:#B91C1C; --err-soft:#FEE2E2;
+    --sfondo:#F4F7FA; --carta:#FFFFFF;
+    --testo:#16324A; --testo-2:#4A6178; --bordo:#D7E0E8;
+    --raggio:16px; --raggio-sm:10px;
+    --ombra:0 4px 18px rgba(11,79,138,.10);
+    --focus:0 0 0 4px rgba(232,89,12,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:18px}                       /* base grande per anziani/caregiver */
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+       background:var(--sfondo);color:var(--testo);line-height:1.55}
+  button{font:inherit;cursor:pointer;border:none}
+  button:focus-visible,select:focus-visible,input:focus-visible{outline:none;box-shadow:var(--focus)}
+  .contenitore{max-width:960px;margin:0 auto;padding:0 20px}
+
+  /* ============ HEADER ISTITUZIONALE ============ */
+  header{background:linear-gradient(135deg,var(--ente-primario),var(--ente-primario-scuro));color:#fff;padding:26px 0 30px}
+  .header-riga{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .logo-ente{width:64px;height:64px;border-radius:14px;background:#fff;display:flex;
+             align-items:center;justify-content:center;font-size:34px;flex-shrink:0;overflow:hidden}
+  .logo-ente img{width:100%;height:100%;object-fit:contain}
+  .h-titolo{font-size:1.55rem;font-weight:800;letter-spacing:-.3px}
+  .h-sotto{font-size:.95rem;opacity:.92;margin-top:2px}
+  .badge-2027{display:inline-block;background:var(--ente-accento);color:#fff;font-weight:800;
+              font-size:.8rem;padding:5px 14px;border-radius:999px;margin-top:12px}
+
+  /* ============ CARD GENERICA ============ */
+  .card{background:var(--carta);border:1px solid var(--bordo);border-radius:var(--raggio);
+        box-shadow:var(--ombra);padding:26px;margin:22px 0}
+  .card h2{font-size:1.25rem;font-weight:800;margin-bottom:6px;color:var(--ente-primario-scuro)}
+  .card h3{font-size:1.05rem;font-weight:800;margin:18px 0 8px}
+  .sottotitolo{color:var(--testo-2);font-size:.95rem;margin-bottom:14px}
+
+  /* ============ BIVIO ONBOARDING ============ */
+  .bivio{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+  @media(max-width:640px){.bivio{grid-template-columns:1fr}html{font-size:17px}}
+  .macro-btn{border-radius:var(--raggio);padding:26px 20px;text-align:left;color:#fff;
+             transition:transform .12s ease;min-height:130px;display:flex;flex-direction:column;gap:8px}
+  .macro-btn:hover{transform:translateY(-2px)}
+  .macro-btn .m-icona{font-size:2rem}
+  .macro-btn .m-titolo{font-size:1.15rem;font-weight:800;line-height:1.3}
+  .macro-btn .m-desc{font-size:.9rem;opacity:.92}
+  .macro-nuova{background:linear-gradient(135deg,#E8590C,#C2410C)}
+  .macro-104{background:linear-gradient(135deg,#0B4F8A,#083A66)}
+  .macro-btn[aria-pressed="true"]{box-shadow:0 0 0 4px var(--ente-oro)}
+
+  /* ============ SEZIONI DINAMICHE ============ */
+  .nascosto{display:none!important}
+  select,input[type=text]{width:100%;padding:15px;border:2px solid var(--bordo);border-radius:var(--raggio-sm);
+        font-size:1.05rem;background:#fff;color:var(--testo)}
+  .griglia-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.griglia-2{grid-template-columns:1fr}}
+  .voce{display:flex;gap:12px;align-items:flex-start;background:var(--sfondo);
+        border:1px solid var(--bordo);border-radius:var(--raggio-sm);padding:14px}
+  .voce .v-icona{font-size:1.3rem;flex-shrink:0}
+  .voce b{display:block;font-size:.98rem}
+  .voce span{font-size:.88rem;color:var(--testo-2)}
+  .banner-ok{background:var(--ok-soft);border-left:6px solid var(--ok);border-radius:var(--raggio-sm);
+             padding:16px;margin:12px 0;font-size:.98rem}
+  .banner-warn{background:var(--warn-soft);border-left:6px solid var(--warn);border-radius:var(--raggio-sm);
+             padding:16px;margin:12px 0;font-size:.98rem}
+  .pill-livello{display:inline-block;padding:6px 16px;border-radius:999px;font-weight:800;font-size:.9rem;margin-bottom:10px}
+
+  /* ============ UPLOAD & OTP ============ */
+  .zona-upload{border:3px dashed var(--bordo);border-radius:var(--raggio);padding:30px;text-align:center;
+               background:var(--sfondo);cursor:pointer;transition:border-color .15s}
+  .zona-upload:hover{border-color:var(--ente-accento)}
+  .file-riga{display:flex;align-items:center;gap:10px;background:var(--sfondo);border:1px solid var(--bordo);
+             border-radius:var(--raggio-sm);padding:12px 14px;margin-top:10px;font-size:.95rem}
+  .btn-primario{background:var(--ente-accento);color:#fff;font-weight:800;font-size:1.05rem;
+                padding:16px 28px;border-radius:999px;width:100%;margin-top:16px;min-height:56px}
+  .btn-primario:disabled{opacity:.5;cursor:not-allowed}
+  .btn-secondario{background:var(--ente-primario);color:#fff;font-weight:800;font-size:1rem;
+                padding:14px 24px;border-radius:999px;min-height:52px}
+  .otp-box{background:var(--ente-primario-scuro);color:#fff;border-radius:var(--raggio);padding:26px;
+           text-align:center;margin-top:16px}
+  .otp-cifre{font-size:2.6rem;font-weight:800;letter-spacing:12px;font-variant-numeric:tabular-nums}
+  .otp-timer{font-size:1.1rem;margin-top:8px;font-variant-numeric:tabular-nums}
+  .otp-scaduto{color:#FCA5A5;font-weight:800}
+
+  /* ============ AREA AMMINISTRATIVA ============ */
+  .admin{background:#0F2A44;border-radius:var(--raggio);color:#E4EEF7;padding:30px;margin:40px 0 20px}
+  .admin h2{color:#fff;font-size:1.2rem;font-weight:800}
+  .admin .sottotitolo{color:#9FB8CE}
+  .admin input[type=text]{background:#132F4C;border-color:#2B4C6B;color:#fff;letter-spacing:6px;
+        text-align:center;font-size:1.4rem;font-weight:800}
+  .fascicolo{background:#132F4C;border:1px solid #2B4C6B;border-radius:var(--raggio-sm);padding:20px;margin-top:18px}
+  .fascicolo h3{color:#FFD8A8;font-size:1.02rem;margin:14px 0 8px}
+  .doc-riga{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #1E3D5C;font-size:.93rem}
+  .doc-riga:last-child{border-bottom:none}
+  .doc-data{color:#8FB4D4;font-variant-numeric:tabular-nums;flex-shrink:0;width:105px;font-weight:700}
+  .icf-riga{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;font-size:.93rem}
+  .icf-barra{flex:1;height:12px;background:#1E3D5C;border-radius:999px;overflow:hidden;max-width:280px}
+  .icf-fill{height:100%;background:linear-gradient(90deg,#4DA3FF,#E8590C);border-radius:999px}
+  .msg-errore{color:#FCA5A5;font-weight:700;margin-top:10px;font-size:.95rem}
+
+  /* ============ PATRONATI ============ */
+  .patronato-riga{display:flex;gap:14px;align-items:center;border:1px solid var(--bordo);
+                  border-radius:var(--raggio-sm);padding:16px;margin-top:12px;background:#fff}
+  .patronato-km{background:var(--ente-primario);color:#fff;font-weight:800;border-radius:var(--raggio-sm);
+                padding:10px 12px;font-size:.95rem;flex-shrink:0;text-align:center;min-width:76px}
+  .nota-legale{font-size:.82rem;color:var(--testo-2);font-style:italic;margin-top:14px;line-height:1.5}
+
+  footer{background:var(--ente-primario-scuro);color:#C9DCEC;padding:30px 0;margin-top:30px;font-size:.9rem}
+  footer b{color:#fff}
+  .contatti-footer{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:14px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="contenitore">
+    <div class="header-riga">
+      <div class="logo-ente" id="logoEnte">🏛️</div>
+      <div>
+        <div class="h-titolo">TutelAPP · <span data-cfg="nomeEnte"></span></div>
+        <div class="h-sotto" data-cfg="settore"></div>
+      </div>
+    </div>
+    <span class="badge-2027">Aggiornata alla Riforma della Disabilità · D.Lgs. 62/2024 · in vigore dal 1° gennaio 2027</span>
+  </div>
+</header>
+
+<main class="contenitore">
+
+  <!-- ================= 1. BIVIO LOGICO ================= -->
+  <section class="card">
+    <h2>Da dove partiamo?</h2>
+    <p class="sottotitolo">Scegli la tua situazione: ti mostreremo solo le informazioni che ti servono.</p>
+    <div class="bivio">
+      <button class="macro-btn macro-nuova" id="btnNuova" aria-pressed="false" onclick="mostraPercorso('nuova')">
+        <span class="m-icona">🆕</span>
+        <span class="m-titolo">Nuova Diagnosi<br>(Iter Semplificato 2027)</span>
+        <span class="m-desc">Il medico invia il Certificato Introduttivo: basta quello, la domanda parte da sola.</span>
+      </button>
+      <button class="macro-btn macro-104" id="btn104" aria-pressed="false" onclick="mostraPercorso('salvaguardia')">
+        <span class="m-icona">🛡️</span>
+        <span class="m-titolo">Ho già la 104<br>(Salvaguardia)</span>
+        <span class="m-desc">Il tuo verbale resta valido. Scopri cosa cambia e il nuovo Progetto di Vita.</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ================= 2. LOGICA 2027 ================= -->
+  <section class="card nascosto" id="sezNuova">
+    <h2>🆕 Iter Semplificato 2027 — Valutazione di Base INPS</h2>
+    <p class="sottotitolo">Dal 2027 non esiste più la doppia domanda: il <b>Certificato Medico Introduttivo</b> del tuo medico
+    avvia direttamente la <b>Valutazione di Base</b> INPS (criteri ICF-WHODAS). L'esito assegna uno dei 4 livelli di sostegno.</p>
+    <label for="selLivello" style="font-weight:800;display:block;margin-bottom:8px">Livello di sostegno riconosciuto (o atteso):</label>
+    <select id="selLivello" onchange="aggiornaLivello()">
+      <option value="">— Seleziona il livello indicato dall'INPS —</option>
+      <option value="lieve">Sostegno Lieve</option>
+      <option value="medio">Sostegno Medio</option>
+      <option value="grave">Sostegno Grave (ex art. 3 c. 3)</option>
+      <option value="gravissimo">Sostegno Gravissimo (non autosufficienza)</option>
+    </select>
+    <div id="dettaglioLivello" class="nascosto" style="margin-top:20px">
+      <span class="pill-livello" id="pillLivello"></span>
+      <h3>💶 Agevolazioni fiscali</h3>
+      <div class="griglia-2" id="boxFisco"></div>
+      <h3>💼 Tutele sul lavoro</h3>
+      <div class="griglia-2" id="boxLavoro"></div>
+      <div class="banner-warn" style="margin-top:16px">⚠️ <b>Nota:</b> l'elenco è orientativo: la spettanza effettiva
+      dipende dal verbale INPS e dai requisiti di legge. Per la verifica puntuale rivolgiti a
+      <span data-cfg="settore"></span> o a un patronato (vedi in fondo).</div>
+    </div>
+  </section>
+
+  <!-- ================= 3. LOGICA SALVAGUARDIA ================= -->
+  <section class="card nascosto" id="sezSalvaguardia">
+    <h2>🛡️ Ho già la Legge 104 — Clausola di Salvaguardia</h2>
+    <div class="banner-ok">✅ <b>Puoi stare tranquillo:</b> i verbali già rilasciati (invalidità civile e Legge 104,
+    compreso l'ex art. 3 comma 3) <b>restano validi a tempo indeterminato</b>. Non devi rifare nessuna visita e
+    non perdi nessuna agevolazione: la riforma vale solo per le nuove domande.</div>
+    <h3>🌱 Novità che puoi attivare: il Progetto di Vita</h3>
+    <p style="font-size:.98rem">Anche con un verbale "vecchio" puoi chiedere il <b>Progetto di Vita</b> personalizzato:
+    un piano unico che mette insieme sostegni sanitari, sociali, scuola/lavoro e vita indipendente, costruito con te.</p>
+    <div class="griglia-2" style="margin-top:14px">
+      <div class="voce"><span class="v-icona">1️⃣</span><div><b>Presenta l'istanza</b><span>Presso <span data-cfg="sede"></span>, oppure scrivi a <span data-cfg="email"></span></span></div></div>
+      <div class="voce"><span class="v-icona">2️⃣</span><div><b>Unità di Valutazione</b><span>L'ente convoca l'unità multidisciplinare insieme a te e alla tua famiglia</span></div></div>
+      <div class="voce"><span class="v-icona">3️⃣</span><div><b>Budget di progetto</b><span>Risorse sanitarie e sociali coordinate in un unico piano scritto</span></div></div>
+      <div class="voce"><span class="v-icona">4️⃣</span><div><b>Referente unico</b><span>Una persona dell'ente che segue il tuo fascicolo nel tempo</span></div></div>
+    </div>
+    <div class="banner-warn" style="margin-top:16px">📞 Referente politico: <b data-cfg="assessore"></b> · Ufficio: <b data-cfg="telefono"></b></div>
+  </section>
+
+  <!-- ================= 4. CONDIVISIONE DOCUMENTI + OTP ================= -->
+  <section class="card">
+    <h2>📤 Condividi i referti con <span data-cfg="nomeEnte"></span></h2>
+    <p class="sottotitolo">Carica i documenti clinici e genera un <b>codice monouso</b>: solo l'operatore comunale a cui lo
+    comunichi potrà aprire il tuo fascicolo, per 10 minuti. Nessun documento gira via e-mail.</p>
+    <div class="zona-upload" onclick="aggiungiFileDemo()" role="button" tabindex="0"
+         onkeydown="if(event.key==='Enter')aggiungiFileDemo()">
+      <div style="font-size:2.2rem">📎</div>
+      <b>Tocca qui per aggiungere un referto</b>
+      <div style="font-size:.88rem;color:var(--testo-2);margin-top:4px">(demo: viene aggiunto un documento di esempio)</div>
+    </div>
+    <div id="listaFile"></div>
+    <button class="btn-primario" id="btnInvia" onclick="inviaAlComune()" disabled>🔐 Invia al Comune e genera codice OTP</button>
+    <div id="otpBox" class="otp-box nascosto">
+      <div style="font-size:.95rem;opacity:.9">Comunica questo codice SOLO all'operatore di <span data-cfg="settore"></span>:</div>
+      <div class="otp-cifre" id="otpCifre">——————</div>
+      <div class="otp-timer" id="otpTimer">Valido per 10:00</div>
+    </div>
+  </section>
+
+  <!-- ================= 5. PATRONATI ================= -->
+  <section class="card">
+    <h2>📍 Trova Patronato a <span data-cfg="citta"></span></h2>
+    <p class="sottotitolo">Sedi convenzionate più vicine a te, in ordine di distanza (geolocalizzazione simulata dal centro di <span data-cfg="citta"></span>).</p>
+    <div id="listaPatronati"></div>
+    <p class="nota-legale">ℹ️ Elenco pubblico e neutrale: l'ordine è determinato esclusivamente dalla distanza geometrica lineare in km.
+    Il servizio digitale è offerto da <span data-cfg="nomeEnte"></span>; le sedi partner contribuiscono al solo canone di manutenzione
+    tecnica della piattaforma, senza alcuna priorità di posizionamento.</p>
+  </section>
+
+  <!-- ================= 6. DASHBOARD AMMINISTRATIVA ================= -->
+  <section class="admin" id="areaAdmin">
+    <h2>🔒 Area Riservata Servizi Sociali — Portale Amministrativo <span data-cfg="nomeEnte"></span></h2>
+    <p class="sottotitolo">Accesso riservato agli operatori autorizzati di <span data-cfg="settore"></span>.
+    Inserisci il codice OTP a 6 cifre comunicato dal cittadino.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">
+      <input type="text" id="inputOtp" maxlength="6" inputmode="numeric" placeholder="______" style="max-width:260px" aria-label="Codice OTP a 6 cifre">
+      <button class="btn-secondario" onclick="sbloccaFascicolo()">Sblocca Fascicolo</button>
+    </div>
+    <div id="adminErrore" class="msg-errore nascosto"></div>
+
+    <div id="fascicolo" class="fascicolo nascosto">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <b style="font-size:1.05rem">📁 Fascicolo della Disabilità — Cittadino/a (ID anonimo #DEMO-2027)</b>
+        <span style="background:#1E7E34;color:#fff;font-size:.8rem;font-weight:800;padding:4px 12px;border-radius:999px">SBLOCCATO</span>
+      </div>
+
+      <h3>Referti clinici (ordine cronologico)</h3>
+      <div id="listaReferti"></div>
+
+      <h3>Limitazioni quotidiane — parametri ICF (OMS)</h3>
+      <div id="listaIcf"></div>
+
+      <button class="btn-secondario" style="margin-top:18px;background:#E8590C" onclick="esportaSisda()">
+        ⬆️ Predisponi scaricamento dati → piattaforma ministeriale SISDA
+      </button>
+      <div id="sisdaEsito" class="nascosto" style="margin-top:12px;color:#8CE99A;font-weight:700;font-size:.95rem">
+        ✅ Pacchetto dati predisposto in formato interoperabile (demo). In produzione: invio tramite cooperazione applicativa SISDA.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="contenitore">
+    <b>TutelAPP</b> — piattaforma white-label per <b data-cfg="nomeEnte"></b> · <span data-cfg="settore"></span>
+    <div class="contatti-footer">
+      <div>📧 <b data-cfg="email"></b></div>
+      <div>📞 <b data-cfg="telefono"></b></div>
+      <div>🏢 <span data-cfg="sede"></span></div>
+      <div>👤 <span data-cfg="assessore"></span></div>
+    </div>
+    <p style="margin-top:14px;font-size:.8rem;opacity:.8">Prototipo dimostrativo. I contenuti normativi (D.Lgs. 62/2024) hanno valore
+    informativo e non sostituiscono i canali ufficiali INPS. Nessun dato reale viene trasmesso o conservato.</p>
+  </div>
+</footer>
+
+<script>
+/* ================================================================
+   CONFIGURAZIONE_COMUNE — UNICO PUNTO DI PERSONALIZZAZIONE WHITE-LABEL
+   Per replicare l'app per un altro ente: modificare SOLO questo oggetto.
+   ================================================================ */
+const CONFIGURAZIONE_COMUNE = {
+  nomeEnte:  "Comune di Sarzana",
+  citta:     "Sarzana",
+  logoUrl:   "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Sarzana-Stemma.svg/240px-Sarzana-Stemma.svg.png", // segnaposto alta risoluzione (sito: sarzana.sp.it)
+  settore:   "Ufficio Servizi Sociali e Welfare",
+  assessore: "Sara Viola (Assessore alle Politiche Sociali)",
+  email:     "servizi.sociali@comune.sarzana.sp.it",
+  telefono:  "+39 0187 614 456",
+  sede:      "Uffici Comunali dei Servizi Sociali, Piazza D. Ricchetti, Sarzana",
+  coloreIstituzionale: "#0B4F8A",   // blu Sarzana — cambia il brand dell'intero portale
+  coloreAccento:       "#E8590C",
+  patronati: [
+    { nome: "Patronato INCA CGIL",  indirizzo: "Via Emiliana 24, Sarzana",        km: 0.4 },
+    { nome: "Patronato ACLI",       indirizzo: "Piazza San Giorgio 5, Sarzana",   km: 0.7 },
+    { nome: "Patronato INAS CISL",  indirizzo: "Via Muccini 41, Sarzana",         km: 1.1 },
+    { nome: "Patronato EPACA",      indirizzo: "Via Variante Aurelia 76, Sarzana",km: 1.9 },
+    { nome: "Patronato ITAL UIL",   indirizzo: "Via Fiasella 52, La Spezia",      km: 14.8 }
+  ]
+};
+
+/* ====== DATI NORMATIVI 2027 (comuni a tutti gli enti) ====== */
+const LIVELLI_2027 = {
+  lieve: { nome:"Sostegno Lieve", colore:"#1E7E34", sfondo:"#E6F4EA",
+    fisco:[
+      ["🧾","Detrazione spese sanitarie","Detrazione 19% delle spese mediche e di assistenza specifica"],
+      ["🦽","IVA 4% ausili tecnici","Aliquota agevolata su ausili e sussidi tecnici/informatici collegati alla menomazione"]],
+    lavoro:[
+      ["🕐","Scelta sede più vicina","Priorità nella scelta della sede di lavoro più vicina al domicilio, ove possibile"],
+      ["💻","Smart working prioritario","Priorità di accesso al lavoro agile secondo i CCNL applicabili"]]},
+  medio: { nome:"Sostegno Medio", colore:"#B45309", sfondo:"#FEF3C7",
+    fisco:[
+      ["🧾","Detrazioni e deduzioni","Detrazione 19% spese sanitarie + deduzione spese mediche generiche e assistenza specifica"],
+      ["🦽","IVA 4% ausili e tecnologia","Su ausili, sussidi tecnici e informatici (PC, tablet, domotica assistiva)"],
+      ["🚗","IVA 4% auto (se ridotte capacità motorie)","Con adattamento del veicolo, ove previsto dal verbale"]],
+    lavoro:[
+      ["🕐","Permessi retribuiti","Permessi mensili secondo il verbale e la disciplina vigente"],
+      ["💻","Smart working prioritario","Priorità di accesso al lavoro agile"],
+      ["🚫","No trasferimento senza consenso","Il lavoratore non può essere trasferito senza il suo consenso"]]},
+  grave: { nome:"Sostegno Grave (ex art. 3 c. 3)", colore:"#C2410C", sfondo:"#FFF0E6",
+    fisco:[
+      ["🚗","IVA 4% acquisto auto","Anche senza adattamento, con limiti di cilindrata (2.000 cc benzina / 2.800 cc diesel)"],
+      ["🛞","Esenzione bollo auto","Esenzione totale dal pagamento della tassa automobilistica"],
+      ["📝","Esenzione imposta trascrizione","Sui passaggi di proprietà del veicolo agevolato"],
+      ["🧾","Deduzione assistenza specifica","Spese mediche generiche e di assistenza specifica interamente deducibili"],
+      ["🏠","Detrazione barriere architettoniche","Per lavori di abbattimento barriere nell'abitazione"]],
+    lavoro:[
+      ["🕐","3 giorni di permesso al mese","Permessi retribuiti L.104 per il lavoratore e per chi assiste"],
+      ["🌙","Congedo straordinario","Fino a 2 anni retribuiti per il familiare convivente che assiste"],
+      ["📍","Sede vicina + no trasferimento","Diritto alla sede più vicina e divieto di trasferimento senza consenso"],
+      ["💻","Smart working prioritario","Priorità di accesso al lavoro agile"]]},
+  gravissimo: { nome:"Sostegno Gravissimo (non autosufficienza)", colore:"#B91C1C", sfondo:"#FEE2E2",
+    fisco:[
+      ["🚗","IVA 4% auto + esenzione bollo","Tutte le agevolazioni auto del livello Grave"],
+      ["💶","Indennità di accompagnamento","Prestazione economica mensile INPS, senza limiti di reddito"],
+      ["🧾","Deduzioni integrali assistenza","Spese di assistenza specifica e badanti secondo la disciplina vigente"],
+      ["🏠","Detrazione barriere + domotica","Interventi su abitazione e tecnologie assistive"]],
+    lavoro:[
+      ["🕐","Permessi potenziati per i caregiver","3 giorni mensili + eventuali ampliamenti previsti dalla riforma"],
+      ["🌙","Congedo straordinario 2 anni","Retribuito, per il familiare che assiste"],
+      ["🏥","Budget di cura nel Progetto di Vita","Sostegni domiciliari coordinati dall'ente insieme all'ASL"]]}
+};
+
+/* ====== BINDING WHITE-LABEL: ogni [data-cfg] pesca dalla configurazione ====== */
+function applicaConfigurazione(){
+  document.querySelectorAll("[data-cfg]").forEach(el=>{
+    const k = el.getAttribute("data-cfg");
+    if (CONFIGURAZIONE_COMUNE[k]) el.textContent = CONFIGURAZIONE_COMUNE[k];
+  });
+  document.documentElement.style.setProperty("--ente-primario", CONFIGURAZIONE_COMUNE.coloreIstituzionale);
+  document.documentElement.style.setProperty("--ente-accento", CONFIGURAZIONE_COMUNE.coloreAccento);
+  document.title = "TutelAPP · " + CONFIGURAZIONE_COMUNE.nomeEnte;
+  if (CONFIGURAZIONE_COMUNE.logoUrl && CONFIGURAZIONE_COMUNE.logoUrl.startsWith("http")) {
+    const img = new Image();
+    img.onload = ()=>{ document.getElementById("logoEnte").innerHTML=""; document.getElementById("logoEnte").appendChild(img); };
+    img.alt = "Logo " + CONFIGURAZIONE_COMUNE.nomeEnte;
+    img.src = CONFIGURAZIONE_COMUNE.logoUrl;
+  }
+}
+
+/* ====== 1. BIVIO ====== */
+function mostraPercorso(quale){
+  document.getElementById("sezNuova").classList.toggle("nascosto", quale!=="nuova");
+  document.getElementById("sezSalvaguardia").classList.toggle("nascosto", quale!=="salvaguardia");
+  document.getElementById("btnNuova").setAttribute("aria-pressed", quale==="nuova");
+  document.getElementById("btn104").setAttribute("aria-pressed", quale==="salvaguardia");
+  const sez = document.getElementById(quale==="nuova" ? "sezNuova" : "sezSalvaguardia");
+  sez.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+/* ====== 2. LIVELLI 2027 ====== */
+function aggiornaLivello(){
+  const v = document.getElementById("selLivello").value;
+  const box = document.getElementById("dettaglioLivello");
+  if(!v){ box.classList.add("nascosto"); return; }
+  const L = LIVELLI_2027[v];
+  const pill = document.getElementById("pillLivello");
+  pill.textContent = L.nome; pill.style.background = L.sfondo; pill.style.color = L.colore;
+  const render = arr => arr.map(([ic,t,d])=>`<div class="voce"><span class="v-icona">${ic}</span><div><b>${t}</b><span>${d}</span></div></div>`).join("");
+  document.getElementById("boxFisco").innerHTML = render(L.fisco);
+  document.getElementById("boxLavoro").innerHTML = render(L.lavoro);
+  box.classList.remove("nascosto");
+}
+
+/* ====== 4. UPLOAD SIMULATO + OTP ====== */
+const DEMO_FILES = ["Referto_RMN_encefalo.pdf","Verbale_visita_neurologica.pdf","Esami_ematochimici_2027.pdf","Relazione_fisiatrica.pdf"];
+let fileCaricati = [];
+let otpAttivo = null;      // { codice, scadenza }
+let otpInterval = null;
+
+function aggiungiFileDemo(){
+  if (fileCaricati.length >= DEMO_FILES.length) return;
+  const nome = DEMO_FILES[fileCaricati.length];
+  fileCaricati.push(nome);
+  const div = document.createElement("div");
+  div.className = "file-riga";
+  div.innerHTML = `<span>📄</span><b style="flex:1">${nome}</b><span style="color:var(--ok);font-weight:800">✓ pronto</span>`;
+  document.getElementById("listaFile").appendChild(div);
+  document.getElementById("btnInvia").disabled = false;
+}
+
+function inviaAlComune(){
+  const codice = String(Math.floor(100000 + Math.random()*900000));
+  otpAttivo = { codice, scadenza: Date.now() + 10*60*1000 };
+  document.getElementById("otpCifre").textContent = codice.split("").join(" ");
+  document.getElementById("otpBox").classList.remove("nascosto");
+  document.getElementById("otpBox").scrollIntoView({behavior:"smooth", block:"center"});
+  clearInterval(otpInterval);
+  otpInterval = setInterval(aggiornaTimer, 250);
+  aggiornaTimer();
+}
+
+function aggiornaTimer(){
+  const el = document.getElementById("otpTimer");
+  const resto = otpAttivo ? otpAttivo.scadenza - Date.now() : 0;
+  if (resto <= 0){
+    clearInterval(otpInterval);
+    el.innerHTML = '<span class="otp-scaduto">⏰ Codice scaduto — genera un nuovo invio</span>';
+    otpAttivo = null;
+    return;
+  }
+  const m = Math.floor(resto/60000), s = Math.floor((resto%60000)/1000);
+  el.textContent = `Valido per ${m}:${String(s).padStart(2,"0")}`;
+}
+
+/* ====== 6. DASHBOARD AMMINISTRATIVA ====== */
+const REFERTI_DEMO = [
+  ["12/01/2026","Esami ematochimici completi — Laboratorio ASL5"],
+  ["03/04/2026","RMN encefalo con mdc — Osp. San Bartolomeo, Sarzana"],
+  ["18/09/2026","Visita neurologica di controllo — verbale specialistico"],
+  ["22/02/2027","Relazione fisiatrica per Valutazione di Base INPS (ICF)"]
+];
+const ICF_DEMO = [
+  ["Mobilità e spostamenti (d450–d465)", 70],
+  ["Cura della propria persona (d510–d570)", 55],
+  ["Vita domestica quotidiana (d610–d660)", 60],
+  ["Interazioni e relazioni (d710–d740)", 30],
+  ["Apprendimento e applicazione (d130–d179)", 25]
+];
+
+function sbloccaFascicolo(){
+  const inp = document.getElementById("inputOtp").value.trim();
+  const err = document.getElementById("adminErrore");
+  err.classList.add("nascosto");
+  if (!otpAttivo){
+    err.textContent = "❌ Nessun codice attivo: il cittadino deve prima generare l'OTP (oppure è scaduto).";
+    err.classList.remove("nascosto"); return;
+  }
+  if (inp !== otpAttivo.codice){
+    err.textContent = "❌ Codice errato. Verifica con il cittadino e riprova.";
+    err.classList.remove("nascosto"); return;
+  }
+  document.getElementById("listaReferti").innerHTML = REFERTI_DEMO
+    .map(([d,t])=>`<div class="doc-riga"><span class="doc-data">${d}</span><span>📄 ${t}</span></div>`).join("");
+  document.getElementById("listaIcf").innerHTML = ICF_DEMO
+    .map(([n,p])=>`<div class="icf-riga"><span style="flex:1">${n}</span><div class="icf-barra"><div class="icf-fill" style="width:${p}%"></div></div><b style="width:44px;text-align:right">${p}%</b></div>`).join("");
+  document.getElementById("fascicolo").classList.remove("nascosto");
+  document.getElementById("sisdaEsito").classList.add("nascosto");
+}
+
+function esportaSisda(){
+  document.getElementById("sisdaEsito").classList.remove("nascosto");
+}
+
+/* ====== 5. PATRONATI (ordinati per distanza lineare km) ====== */
+function renderPatronati(){
+  const lista = [...CONFIGURAZIONE_COMUNE.patronati].sort((a,b)=>a.km-b.km);
+  document.getElementById("listaPatronati").innerHTML = lista.map(p=>`
+    <div class="patronato-riga">
+      <div class="patronato-km">📍 ${p.km.toFixed(1).replace(".",",")} km</div>
+      <div style="flex:1"><b>${p.nome}</b><div style="font-size:.88rem;color:var(--testo-2)">${p.indirizzo}</div></div>
+    </div>`).join("");
+}
+
+applicaConfigurazione();
+renderPatronati();
+</script>
+</body>
+</html>
