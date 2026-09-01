@@ -1,0 +1,18 @@
+[build]
+  base = "frontend"
+  command = "yarn install --non-interactive --no-progress && yarn build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/_expo/static/*"
+
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
